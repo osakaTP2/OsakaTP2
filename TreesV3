@@ -4,7 +4,7 @@
 local Players = game:GetService("Players")
 local LP = Players.LocalPlayer
 
--- Clipboard หลาย Executor
+-- Clipboard Executor
 local function CopyToClipboard(text)
 	if setclipboard then
 		setclipboard(text)
