@@ -119,7 +119,7 @@ List.Padding = UDim.new(0,8)
 List.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
 --==================================================
--- BUTTON HELPER (FIXED)
+-- BUTTON HELPER
 --==================================================
 local function createButton(text, callback)
 	local btn = Instance.new("TextButton", Content)
@@ -140,6 +140,86 @@ local function createButton(text, callback)
 end
 
 --==================================================
+-- CHEST WINDOW
+--==================================================
+local ChestWindow
+
+getgenv().OPEN_CHEST_WINDOW = function()
+	if ChestWindow then
+		ChestWindow:Destroy()
+	end
+
+	local Win = Instance.new("Frame", gui)
+	ChestWindow = Win
+	Win.Size = UDim2.fromOffset(220,300)
+	Win.Position = UDim2.fromScale(0.65,0.5)
+	Win.AnchorPoint = Vector2.new(0.5,0.5)
+	Win.BackgroundColor3 = Color3.fromRGB(25,25,25)
+	Win.BorderSizePixel = 0
+	Instance.new("UICorner", Win)
+
+	-- TITLE
+	local Title = Instance.new("TextLabel", Win)
+	Title.Size = UDim2.new(1,-40,0,30)
+	Title.Position = UDim2.fromOffset(10,0)
+	Title.Text = "💼 Chest Window"
+	Title.Font = Enum.Font.GothamBold
+	Title.TextSize = 13
+	Title.TextColor3 = Color3.new(1,1,1)
+	Title.BackgroundTransparency = 1
+	drag(Win, Title)
+
+	-- CLOSE
+	local Close = Instance.new("TextButton", Win)
+	Close.Size = UDim2.fromOffset(26,26)
+	Close.Position = UDim2.fromOffset(188,2)
+	Close.Text = "X"
+	Close.Font = Enum.Font.GothamBold
+	Close.TextSize = 12
+	Close.TextColor3 = Color3.new(1,1,1)
+	Close.BackgroundColor3 = Color3.fromRGB(140,0,0)
+	Instance.new("UICorner", Close)
+	Close.MouseButton1Click:Connect(function()
+		Win:Destroy()
+	end)
+
+	-- SCROLL
+	local Scroll = Instance.new("ScrollingFrame", Win)
+	Scroll.Position = UDim2.fromOffset(10,36)
+	Scroll.Size = UDim2.fromOffset(200,250)
+	Scroll.ScrollBarThickness = 5
+	Scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	Scroll.CanvasSize = UDim2.new(0,0,0,0)
+	Scroll.BackgroundColor3 = Color3.fromRGB(35,35,35)
+	Scroll.BorderSizePixel = 0
+	Instance.new("UICorner", Scroll)
+
+	local Layout = Instance.new("UIListLayout", Scroll)
+	Layout.Padding = UDim.new(0,6)
+
+	-- LIST CHESTS
+	for _, chest in ipairs(workspace._Crates:GetChildren()) do
+		if chest:IsA("Model") then
+			local b = Instance.new("TextButton", Scroll)
+			b.Size = UDim2.fromOffset(190,28)
+			b.Text = "TP + OPEN : "..chest.Name
+			b.Font = Enum.Font.Gotham
+			b.TextSize = 11
+			b.TextColor3 = Color3.new(1,1,1)
+			b.BackgroundColor3 = Color3.fromRGB(70,70,70)
+			b.BorderSizePixel = 0
+			Instance.new("UICorner", b)
+
+			b.MouseButton1Click:Connect(function()
+				if getgenv().TP_OPEN_CHEST then
+					getgenv().TP_OPEN_CHEST(chest)
+				end
+			end)
+		end
+	end
+end
+
+--==================================================
 -- BUTTONS
 --==================================================
 
@@ -148,6 +228,7 @@ createButton("💼 Scan Chest / Dupe", function()
 		getgenv().OPEN_CHEST_WINDOW()
 	end
 end)
+
 
 createButton("🧲 Auto Carry : OFF", function(b)
 	getgenv().AUTO_CARRY = not getgenv().AUTO_CARRY
