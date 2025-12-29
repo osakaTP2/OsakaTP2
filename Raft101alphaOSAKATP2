@@ -240,6 +240,11 @@ createButton("🚀 Auto Farm : OFF", function(b)
 	b.Text = "🚀 Auto Farm : "..(getgenv().AUTO_TP_CARRY and "ON" or "OFF")
 end)
 
+createButton("🛠️ Auto Farm craft : OFF", function(btn)
+	getgenv().AUTO_FARM_CRAFT = not getgenv().AUTO_FARM_CRAFT
+	btn.Text = "🛠️ Auto Farm craft : "..(getgenv().AUTO_FARM_CRAFT and "ON" or "OFF")
+end)
+
 createButton("⚔️ Kill Aura : OFF", function(b)
 	getgenv().KILL_AURA = not getgenv().KILL_AURA
 	b.Text = "⚔️ Kill Aura : "..(getgenv().KILL_AURA and "ON" or "OFF")
