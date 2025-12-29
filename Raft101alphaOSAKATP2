@@ -142,14 +142,82 @@ local function createButton(text, callback)
 	return btn
 end
 
+--======================
+-- CHEST WINDOW UI
+--======================
+local ChestWindow
+
+local function openChestWindow()
+	if ChestWindow then ChestWindow:Destroy() end
+
+	local Win = Instance.new("Frame", gui)
+	ChestWindow = Win
+	Win.Size = UDim2.fromOffset(200,280)
+	Win.Position = UDim2.fromScale(0.55,0.5)
+	Win.AnchorPoint = Vector2.new(0.5,0.5)
+	Win.BackgroundColor3 = Color3.fromRGB(25,25,25)
+	Instance.new("UICorner", Win)
+
+	local Top = Instance.new("TextLabel", Win)
+	Top.Size = UDim2.new(1,-40,0,30)
+	Top.Position = UDim2.fromOffset(10,0)
+	Top.Text = "💼 Chest List / Dupe"
+	Top.Font = Enum.Font.GothamBold
+	Top.TextSize = 12
+	Top.TextColor3 = Color3.new(1,1,1)
+	Top.BackgroundTransparency = 1
+	makeDraggable(Win, Top)
+
+	local Close = Instance.new("TextButton", Win)
+	Close.Size = UDim2.fromOffset(26,26)
+	Close.Position = UDim2.fromOffset(170,2)
+	Close.Text = "X"
+	Close.BackgroundColor3 = Color3.fromRGB(150,0,0)
+	Instance.new("UICorner", Close)
+	Close.MouseButton1Click:Connect(function()
+		Win:Destroy()
+	end)
+
+	local Scroll = Instance.new("ScrollingFrame", Win)
+	Scroll.Position = UDim2.fromOffset(10,36)
+	Scroll.Size = UDim2.fromOffset(170,220)
+	Scroll.ScrollBarThickness = 5
+	Scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	Scroll.BackgroundColor3 = Color3.fromRGB(35,35,35)
+	Instance.new("UICorner", Scroll)
+
+	local layout = Instance.new("UIListLayout", Scroll)
+	layout.Padding = UDim.new(0,6)
+
+	for _, chest in ipairs(workspace._Crates:GetChildren()) do
+		if chest:IsA("Model") then
+			local b = Instance.new("TextButton", Scroll)
+			b.Size = UDim2.fromOffset(160,28)
+			b.Text = "TP + OPEN : "..chest.Name
+			b.Font = Enum.Font.Gotham
+			b.TextSize = 11
+			b.TextColor3 = Color3.new(1,1,1)
+			b.BackgroundColor3 = Color3.fromRGB(70,70,70)
+			b.BorderSizePixel = 0
+			Instance.new("UICorner", b)
+
+			b.MouseButton1Click:Connect(function()
+				if getgenv().TP_OPEN_CHEST then
+					getgenv().TP_OPEN_CHEST(chest)
+				end
+			end)
+		end
+	end
+end
 
 --======================
 -- UI BUTTONS (FULL)
 --======================
 
 createButton("💼 Scan Chest / Dupe", function()
-	-- logic.lua
+	openChestWindow()
 end)
+
 
 createButton("🧲  : OFF", function(btn)
 	Flags.AUTO_CARRY = not Flags.AUTO_CARRY
