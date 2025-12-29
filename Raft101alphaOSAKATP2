@@ -135,16 +135,20 @@ local function createButton(text, callback)
 	btn.BorderSizePixel = 0
 	Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
 
-	btn.MouseButton1Click:Connect(callback)
+	btn.MouseButton1Click:Connect(function()
+		callback(btn) -- ✅ 
+	end)
+
 	return btn
 end
+
 
 --======================
 -- UI BUTTONS (FULL)
 --======================
 
 createButton("💼 Scan Chest / Dupe", function()
-	-- logic.lua จะ hook เอง
+	-- logic.lua
 end)
 
 createButton("🧲  : OFF", function(btn)
