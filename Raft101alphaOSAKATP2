@@ -143,6 +143,12 @@ end
 -- BUTTONS
 --==================================================
 
+createButton("💼 Scan Chest / Dupe", function()
+	if getgenv().OPEN_CHEST_WINDOW then
+		getgenv().OPEN_CHEST_WINDOW()
+	end
+end)
+
 createButton("🧲 Auto Carry : OFF", function(b)
 	getgenv().AUTO_CARRY = not getgenv().AUTO_CARRY
 	b.Text = "🧲 Auto Carry : "..(getgenv().AUTO_CARRY and "ON" or "OFF")
@@ -163,11 +169,6 @@ createButton("🐚 Auto Seashells : OFF", function(b)
 	b.Text = "🐚 Auto Seashells : "..(getgenv().AUTO_SEASHELLS and "ON" or "OFF")
 end)
 
-createButton("💼 Scan Chest / Dupe", function()
-	if getgenv().OPEN_CHEST_WINDOW then
-		getgenv().OPEN_CHEST_WINDOW()
-	end
-end)
 
 createButton("🚣 TP Boat", function()
 	if getgenv().TP_BOAT then
