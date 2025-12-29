@@ -1,8 +1,8 @@
 --==================================================
--- OSAKA TP2 - UI ONLY
+-- OSAKA TP2 - FULL UI 
 --==================================================
 
--- GLOBAL FLAGS
+-- GLOBAL FLAGS (logic.lua จะอ่าน)
 getgenv().Flags = {
 	AUTO_CARRY     = false,
 	AUTO_TP_CARRY  = false,
@@ -29,14 +29,14 @@ end)
 --======================
 -- GUI ROOT
 --======================
-local Gui = Instance.new("ScreenGui", PlayerGui)
-Gui.Name = "OsakaTP2V1"
-Gui.ResetOnSpawn = false
+local gui = Instance.new("ScreenGui", PlayerGui)
+gui.Name = "OsakaTP2V1"
+gui.ResetOnSpawn = false
 
 --======================
--- TOGGLE MAIN BUTTON
+-- TOGGLE BUTTON
 --======================
-local ToggleBtn = Instance.new("TextButton", Gui)
+local ToggleBtn = Instance.new("TextButton", gui)
 ToggleBtn.Size = UDim2.fromOffset(44,44)
 ToggleBtn.Position = UDim2.fromOffset(12,12)
 ToggleBtn.Text = "≡"
@@ -51,7 +51,7 @@ ToggleBtn.ZIndex = 10
 --======================
 -- MAIN FRAME
 --======================
-local Main = Instance.new("Frame", Gui)
+local Main = Instance.new("Frame", gui)
 Main.Size = UDim2.fromOffset(190,275)
 Main.Position = UDim2.fromScale(0.5,0.5)
 Main.AnchorPoint = Vector2.new(0.5,0.5)
@@ -140,11 +140,16 @@ local function createButton(text, callback)
 end
 
 --======================
--- BUTTONS (FLAGS ONLY)
+-- UI BUTTONS (FULL)
 --======================
-createButton("🧲 Auto Carry : OFF", function(btn)
+
+createButton("💼 Scan Chest / Dupe", function()
+	-- logic.lua จะ hook เอง
+end)
+
+createButton("🧲  : OFF", function(btn)
 	Flags.AUTO_CARRY = not Flags.AUTO_CARRY
-	btn.Text = "🧲 Auto Carry : "..(Flags.AUTO_CARRY and "ON" or "OFF")
+	btn.Text = "🧲 : "..(Flags.AUTO_CARRY and "ON" or "OFF")
 end)
 
 createButton("🚀 Auto Farm : OFF", function(btn)
@@ -157,9 +162,13 @@ createButton("⚔️ Kill Aura : OFF", function(btn)
 	btn.Text = "⚔️ Kill Aura : "..(Flags.KILL_AURA and "ON" or "OFF")
 end)
 
+createButton("🚣 Boat", function()
+	-- logic.lua จะ hook เอง
+end)
+
 createButton("🐚 Auto Seashells : OFF", function(btn)
 	Flags.AUTO_SEASHELLS = not Flags.AUTO_SEASHELLS
 	btn.Text = "🐚 Auto Seashells : "..(Flags.AUTO_SEASHELLS and "ON" or "OFF")
 end)
 
-print("✅ OsakaTP2 UI Loaded")
+print("✅ OsakaTP2 FULL UI Loaded")
