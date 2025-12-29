@@ -256,5 +256,4 @@ createButton("🚣 TP Boat", function()
 		getgenv().TP_BOAT()
 	end
 end)
-
 print("✅ UI SCRIPT 3 LOADED")
