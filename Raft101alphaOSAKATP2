@@ -235,8 +235,11 @@ createButton("⚔️ Kill Aura : OFF", function(btn)
 end)
 
 createButton("🚣 Boat", function()
-	-- logic.lua จะ hook เอง
+	if getgenv().TP_BOAT then
+		getgenv().TP_BOAT()
+	end
 end)
+
 
 createButton("🐚 Auto Seashells : OFF", function(btn)
 	Flags.AUTO_SEASHELLS = not Flags.AUTO_SEASHELLS
