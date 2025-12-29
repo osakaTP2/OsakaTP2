@@ -1,0 +1,165 @@
+--==================================================
+-- OSAKA TP2 - UI ONLY
+--==================================================
+
+-- GLOBAL FLAGS
+getgenv().Flags = {
+	AUTO_CARRY     = false,
+	AUTO_TP_CARRY  = false,
+	KILL_AURA      = false,
+	AUTO_SEASHELLS = false,
+}
+
+--======================
+-- SERVICES
+--======================
+local Players = game:GetService("Players")
+local UIS     = game:GetService("UserInputService")
+
+local Player    = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+--======================
+-- CLEAN OLD UI
+--======================
+pcall(function()
+	PlayerGui.OsakaTP2V1:Destroy()
+end)
+
+--======================
+-- GUI ROOT
+--======================
+local Gui = Instance.new("ScreenGui", PlayerGui)
+Gui.Name = "OsakaTP2V1"
+Gui.ResetOnSpawn = false
+
+--======================
+-- TOGGLE MAIN BUTTON
+--======================
+local ToggleBtn = Instance.new("TextButton", Gui)
+ToggleBtn.Size = UDim2.fromOffset(44,44)
+ToggleBtn.Position = UDim2.fromOffset(12,12)
+ToggleBtn.Text = "≡"
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextSize = 22
+ToggleBtn.TextColor3 = Color3.new(1,1,1)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(45,45,45)
+ToggleBtn.BorderSizePixel = 0
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(1,0)
+ToggleBtn.ZIndex = 10
+
+--======================
+-- MAIN FRAME
+--======================
+local Main = Instance.new("Frame", Gui)
+Main.Size = UDim2.fromOffset(190,275)
+Main.Position = UDim2.fromScale(0.5,0.5)
+Main.AnchorPoint = Vector2.new(0.5,0.5)
+Main.BackgroundColor3 = Color3.fromRGB(30,30,30)
+Instance.new("UICorner", Main)
+
+local UI_OPEN = true
+ToggleBtn.MouseButton1Click:Connect(function()
+	UI_OPEN = not UI_OPEN
+	Main.Visible = UI_OPEN
+end)
+
+--======================
+-- DRAG FUNCTION
+--======================
+local function makeDraggable(frame, handle)
+	local dragging, dragStart, startPos
+
+	handle.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = i.Position
+			startPos = frame.Position
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(i)
+		if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+			local delta = i.Position - dragStart
+			frame.Position = UDim2.new(
+				startPos.X.Scale,
+				startPos.X.Offset + delta.X,
+				startPos.Y.Scale,
+				startPos.Y.Offset + delta.Y
+			)
+		end
+	end)
+
+	UIS.InputEnded:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+		end
+	end)
+end
+
+--======================
+-- TITLE
+--======================
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1,0,0,30)
+Title.BackgroundTransparency = 1
+Title.Text = "OsakaTP2"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 14
+Title.TextColor3 = Color3.new(1,1,1)
+makeDraggable(Main, Title)
+
+--======================
+-- CONTENT
+--======================
+local Content = Instance.new("Frame", Main)
+Content.Size = UDim2.new(1,0,1,-36)
+Content.Position = UDim2.fromOffset(0,34)
+Content.BackgroundTransparency = 1
+
+local List = Instance.new("UIListLayout", Content)
+List.Padding = UDim.new(0,8)
+List.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+--======================
+-- BUTTON HELPER
+--======================
+local function createButton(text, callback)
+	local btn = Instance.new("TextButton", Content)
+	btn.Size = UDim2.fromOffset(160,32)
+	btn.Text = text
+	btn.Font = Enum.Font.Gotham
+	btn.TextSize = 12
+	btn.TextColor3 = Color3.new(1,1,1)
+	btn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+	btn.BorderSizePixel = 0
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+
+	btn.MouseButton1Click:Connect(callback)
+	return btn
+end
+
+--======================
+-- BUTTONS (FLAGS ONLY)
+--======================
+createButton("🧲 Auto Carry : OFF", function(btn)
+	Flags.AUTO_CARRY = not Flags.AUTO_CARRY
+	btn.Text = "🧲 Auto Carry : "..(Flags.AUTO_CARRY and "ON" or "OFF")
+end)
+
+createButton("🚀 Auto Farm : OFF", function(btn)
+	Flags.AUTO_TP_CARRY = not Flags.AUTO_TP_CARRY
+	btn.Text = "🚀 Auto Farm : "..(Flags.AUTO_TP_CARRY and "ON" or "OFF")
+end)
+
+createButton("⚔️ Kill Aura : OFF", function(btn)
+	Flags.KILL_AURA = not Flags.KILL_AURA
+	btn.Text = "⚔️ Kill Aura : "..(Flags.KILL_AURA and "ON" or "OFF")
+end)
+
+createButton("🐚 Auto Seashells : OFF", function(btn)
+	Flags.AUTO_SEASHELLS = not Flags.AUTO_SEASHELLS
+	btn.Text = "🐚 Auto Seashells : "..(Flags.AUTO_SEASHELLS and "ON" or "OFF")
+end)
+
+print("✅ OsakaTP2 UI Loaded")
