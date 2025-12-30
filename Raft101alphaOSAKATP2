@@ -250,9 +250,9 @@ createButton("⚔️ Kill Aura : OFF", function(b)
 	b.Text = "⚔️ Kill Aura : "..(getgenv().KILL_AURA and "ON" or "OFF")
 end)
 
-createButton("🐚 Auto Seashells : OFF", function(b)
+createButton("🐚 Auto Seashells : Click", function(b)
 	getgenv().AUTO_SEASHELLS = not getgenv().AUTO_SEASHELLS
-	b.Text = "🐚 Auto Seashells : "..(getgenv().AUTO_SEASHELLS and "ON" or "OFF")
+	b.Text = "🐚 Auto Seashells : "..(getgenv().AUTO_SEASHELLS and "Click" or "Click")
 end)
 
 
