@@ -1,0 +1,304 @@
+--==================================================
+-- OSAKA UI
+--==================================================
+
+--==================================================
+-- GLOBAL FLAGS
+--==================================================
+getgenv().AUTO_CARRY = false
+getgenv().AUTO_TP_CARRY = false
+getgenv().KILL_AURA = false
+getgenv().AUTO_SEASHELLS = false
+
+--==================================================
+-- SERVICES
+--==================================================
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+--==================================================
+-- CLEAN OLD UI
+--==================================================
+pcall(function()
+	PlayerGui:FindFirstChild("OsakaUI_S3"):Destroy()
+end)
+
+--==================================================
+-- GUI ROOT
+--==================================================
+local gui = Instance.new("ScreenGui")
+gui.Name = "OsakaUI_S3"
+gui.ResetOnSpawn = false
+gui.Parent = PlayerGui
+
+--==================================================
+-- TOGGLE BUTTON
+--==================================================
+local ToggleBtn = Instance.new("TextButton", gui)
+ToggleBtn.Size = UDim2.fromOffset(42,42)
+ToggleBtn.Position = UDim2.fromOffset(12,12)
+ToggleBtn.Text = "≡"
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextSize = 22
+ToggleBtn.TextColor3 = Color3.new(1,1,1)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(45,45,45)
+ToggleBtn.BorderSizePixel = 0
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(1,0)
+ToggleBtn.ZIndex = 10
+
+--==================================================
+-- MAIN FRAME
+--==================================================
+local Main = Instance.new("Frame", gui)
+Main.Size = UDim2.fromOffset(200,240)
+Main.Position = UDim2.fromScale(0.5,0.5)
+Main.AnchorPoint = Vector2.new(0.5,0.5)
+Main.BackgroundColor3 = Color3.fromRGB(30,30,30)
+Main.BorderSizePixel = 0
+Instance.new("UICorner", Main)
+
+local OPEN = true
+ToggleBtn.MouseButton1Click:Connect(function()
+	OPEN = not OPEN
+	Main.Visible = OPEN
+end)
+
+--==================================================
+-- DRAG
+--==================================================
+local function drag(frame, handle)
+	local d, s, p
+	handle.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 then
+			d = true
+			s = i.Position
+			p = frame.Position
+		end
+	end)
+	UIS.InputChanged:Connect(function(i)
+		if d and i.UserInputType == Enum.UserInputType.MouseMovement then
+			local dx = i.Position - s
+			frame.Position = UDim2.new(
+				p.X.Scale, p.X.Offset + dx.X,
+				p.Y.Scale, p.Y.Offset + dx.Y
+			)
+		end
+	end)
+	UIS.InputEnded:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 then
+			d = false
+		end
+	end)
+end
+
+--==================================================
+-- TITLE
+--==================================================
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1,0,0,30)
+Title.Text = "OsakaTP2V.2"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 14
+Title.TextColor3 = Color3.new(1,1,1)
+Title.BackgroundTransparency = 1
+drag(Main, Title)
+
+--==================================================
+-- CONTENT (SCROLL FIXED)
+--==================================================
+local Content = Instance.new("ScrollingFrame", Main)
+Content.Position = UDim2.fromOffset(0,34)
+Content.Size = UDim2.new(1,0,1,-34)
+
+Content.CanvasSize = UDim2.new(0,0,0,0)
+Content.ScrollBarThickness = 6
+Content.ScrollBarImageTransparency = 0.2
+
+Content.BackgroundTransparency = 1
+Content.BorderSizePixel = 0
+Content.ClipsDescendants = true
+
+--==================================================
+-- UI LIST LAYOUT 
+--==================================================
+local List = Instance.new("UIListLayout", Content)
+List.Padding = UDim.new(0,8)
+List.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	Content.CanvasSize = UDim2.new(
+		0, 0,
+		0, List.AbsoluteContentSize.Y + 10
+	)
+end)
+
+
+
+
+
+--==================================================
+-- BUTTON HELPER
+--==================================================
+local function createButton(text, callback)
+	local btn = Instance.new("TextButton", Content)
+	btn.Size = UDim2.fromOffset(170,32)
+	btn.Text = text
+	btn.Font = Enum.Font.Gotham
+	btn.TextSize = 12
+	btn.TextColor3 = Color3.new(1,1,1)
+	btn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+	btn.BorderSizePixel = 0
+	Instance.new("UICorner", btn)
+
+	btn.MouseButton1Click:Connect(function()
+		callback(btn)
+	end)
+
+	return btn
+end
+
+--==================================================
+-- CHEST WINDOW
+--==================================================
+local ChestWindow
+
+getgenv().OPEN_CHEST_WINDOW = function()
+	if ChestWindow then
+		ChestWindow:Destroy()
+	end
+
+	local Win = Instance.new("Frame", gui)
+	ChestWindow = Win
+	Win.Size = UDim2.fromOffset(220,270)
+	Win.Position = UDim2.fromScale(0.65,0.5)
+	Win.AnchorPoint = Vector2.new(0.5,0.5)
+	Win.BackgroundColor3 = Color3.fromRGB(25,25,25)
+	Win.BorderSizePixel = 0
+	Instance.new("UICorner", Win)
+
+	-- TITLE
+	local Title = Instance.new("TextLabel", Win)
+	Title.Size = UDim2.new(1,-40,0,30)
+	Title.Position = UDim2.fromOffset(10,0)
+	Title.Text = "💼 Chest Window"
+	Title.Font = Enum.Font.GothamBold
+	Title.TextSize = 13
+	Title.TextColor3 = Color3.new(1,1,1)
+	Title.BackgroundTransparency = 1
+	drag(Win, Title)
+
+	-- CLOSE
+	local Close = Instance.new("TextButton", Win)
+	Close.Size = UDim2.fromOffset(26,26)
+	Close.Position = UDim2.fromOffset(184,2)
+	Close.Text = "X"
+	Close.Font = Enum.Font.GothamBold
+	Close.TextSize = 12
+	Close.TextColor3 = Color3.new(1,1,1)
+	Close.BackgroundColor3 = Color3.fromRGB(140,0,0)
+	Instance.new("UICorner", Close)
+	Close.MouseButton1Click:Connect(function()
+		Win:Destroy()
+	end)
+
+	-- SCROLL
+	local Scroll = Instance.new("ScrollingFrame", Win)
+	Scroll.Position = UDim2.fromOffset(10,36)
+	Scroll.Size = UDim2.fromOffset(200,230)
+	Scroll.ScrollBarThickness = 5
+	Scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	Scroll.CanvasSize = UDim2.new(0,0,0,0)
+	Scroll.BackgroundColor3 = Color3.fromRGB(35,35,35)
+	Scroll.BorderSizePixel = 0
+	Instance.new("UICorner", Scroll)
+
+	local Layout = Instance.new("UIListLayout", Scroll)
+	Layout.Padding = UDim.new(0,6)
+
+	-- LIST CHESTS
+	for _, chest in ipairs(workspace._Crates:GetChildren()) do
+		if chest:IsA("Model") then
+			local b = Instance.new("TextButton", Scroll)
+			b.Size = UDim2.fromOffset(190,28)
+			b.Text = "💎 : "..chest.Name
+			b.Font = Enum.Font.Gotham
+			b.TextSize = 11
+			b.TextColor3 = Color3.new(1,1,1)
+			b.BackgroundColor3 = Color3.fromRGB(70,70,70)
+			b.BorderSizePixel = 0
+			Instance.new("UICorner", b)
+
+			b.MouseButton1Click:Connect(function()
+				if getgenv().TP_OPEN_CHEST then
+					getgenv().TP_OPEN_CHEST(chest)
+				end
+			end)
+		end
+	end
+end
+
+--==================================================
+-- BUTTONS
+--==================================================
+
+createButton("💼 Scan Chest / Dupe", function()
+	if getgenv().OPEN_CHEST_WINDOW then
+		getgenv().OPEN_CHEST_WINDOW()
+	end
+end)
+
+createButton("🚣 TP Boat", function()
+	if getgenv().TP_BOAT then
+		getgenv().TP_BOAT()
+	end
+end)
+
+
+createButton("🧲 Auto Carry : OFF", function(b)
+	getgenv().AUTO_CARRY = not getgenv().AUTO_CARRY
+	b.Text = "🧲 Auto Carry : "..(getgenv().AUTO_CARRY and "ON" or "OFF")
+end)
+
+createButton("🚀 Farm Campfire : OFF", function(b)
+	getgenv().AUTO_TP_CARRY = not getgenv().AUTO_TP_CARRY
+	b.Text = "🚀 Farm Campfire : "..(getgenv().AUTO_TP_CARRY and "ON" or "OFF")
+end)
+
+createButton("🛠️ Farm Craft : OFF", function(btn)
+	getgenv().AUTO_FARM_CRAFT = not getgenv().AUTO_FARM_CRAFT
+	btn.Text = "🛠️ Farm Craft : "..(getgenv().AUTO_FARM_CRAFT and "ON" or "OFF")
+end)
+
+createButton("⚔️ Kill Axe : OFF", function(b)
+	getgenv().KILL_AURA = not getgenv().KILL_AURA
+	b.Text = "⚔️ Kill Axe : "..(getgenv().KILL_AURA and "ON" or "OFF")
+end)
+
+createButton("🔫 Auto Shoot : OFF", function(btn)
+	getgenv().AUTO_RANGE_SHOOT = not getgenv().AUTO_RANGE_SHOOT
+	btn.Text = "🔫 Auto Shoot : "..(getgenv().AUTO_RANGE_SHOOT and "ON" or "OFF")
+end)
+
+createButton("🎁 Auto Gift : OFF", function(b)
+	getgenv().AUTO_GIFT = not getgenv().AUTO_GIFT
+	b.Text = "🎁 Auto Gift : "..(getgenv().AUTO_GIFT and "ON" or "OFF")
+end)
+
+createButton("🐚 Auto Seashells : Click", function(b)
+	getgenv().AUTO_SEASHELLS = not getgenv().AUTO_SEASHELLS
+	b.Text = "🐚 Auto Seashells : "..(getgenv().AUTO_SEASHELLS and "Click" or "Click")
+end)
+
+
+
+
+
+
+
+
+
+
+print("✅ OsakaTP2 UI LOADED")
