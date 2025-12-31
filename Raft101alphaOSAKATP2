@@ -241,16 +241,6 @@ createButton("🚀 Auto Farm : OFF", function(b)
 end)
 
 
-createButton("⚔️ Kill Aura : OFF", function(b)
-	getgenv().KILL_AURA = not getgenv().KILL_AURA
-	b.Text = "⚔️ Kill Aura : "..(getgenv().KILL_AURA and "ON" or "OFF")
-end)
-
-createButton("🐚 Auto Seashells : Click", function(b)
-	getgenv().AUTO_SEASHELLS = not getgenv().AUTO_SEASHELLS
-	b.Text = "🐚 Auto Seashells : "..(getgenv().AUTO_SEASHELLS and "Click" or "Click")
-end)
-
 
 createButton("🚣 TP Boat", function()
 	if getgenv().TP_BOAT then
