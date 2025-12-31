@@ -337,9 +337,9 @@ createButton("🚣 TP Boat", function()
 end)
 
 
-createButton("🧲 Auto Carry : OFF", function(b)
+createButton("🧲  : OFF", function(b)
 	getgenv().AUTO_CARRY = not getgenv().AUTO_CARRY
-	b.Text = "🧲 Auto Carry : "..(getgenv().AUTO_CARRY and "ON" or "OFF")
+	b.Text = "🧲  : "..(getgenv().AUTO_CARRY and "ON" or "OFF")
 end)
 
 createButton("🚀 Farm Campfire : OFF", function(b)
