@@ -64,12 +64,12 @@ ToggleBtn.Active = true
 
 Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0,8)
 
--- เงา neumorphism
+
 local stroke = Instance.new("UIStroke", ToggleBtn)
 stroke.Color = Color3.fromRGB(200,200,200)
 stroke.Thickness = 1
 
--- ปุ่มคลิก
+
 local Click = Instance.new("TextButton", ToggleBtn)
 Click.Size = UDim2.fromScale(1,1)
 Click.BackgroundTransparency = 1
@@ -140,7 +140,7 @@ Click.MouseButton1Click:Connect(function()
 		tMidOff:Play()
 	end
 
-	-- ✅ พับ / เปิด UI หลัก
+	
 	Main.Visible = not opened
 end)
 
@@ -323,6 +323,7 @@ end
 --==================================================
 -- BUTTONS
 --==================================================
+
 createButton("💼 Scan Chest / Dupe", function()
 	if getgenv().OPEN_CHEST_WINDOW then
 		getgenv().OPEN_CHEST_WINDOW()
@@ -369,8 +370,22 @@ end)
 createButton("🎁 Auto Gift : OFF", function(b)
 	getgenv().AUTO_GIFT = not getgenv().AUTO_GIFT
 	b.Text = "🎁 Auto Gift : "..(getgenv().AUTO_GIFT and "ON" or "OFF")
-end)ไ
+end)
+
+
+
+
+
 
 
 
 print("✅ OsakaTP2 UI LOADED")
+
+
+
+
+
+
+
+
+
