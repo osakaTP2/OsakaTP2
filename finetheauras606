@@ -94,10 +94,156 @@ btn("🌀 AUTO FIND MORPH",function(b)
 	b.BackgroundColor3 = getgenv().AUTO_FIND_MORPH_ALL and Color3.fromRGB(90,140,200) or Color3.fromRGB(70,70,70)
 end)
 btn("🌀 MORPHS AURA WINDOW", function()
-	if getgenv().OPEN_MORPH_WINDOW then
-		getgenv().OPEN_MORPH_WINDOW()
-	end
+	OPEN_MORPH_WINDOW()
 end)
+
+
+--==================================================
+-- MORPH WINDOW
+--==================================================
+local MorphWindow
+
+local function OPEN_MORPH_WINDOW()
+	if MorphWindow then
+		MorphWindow:Destroy()
+	end
+
+	local Win = Instance.new("Frame", gui)
+	MorphWindow = Win
+	Win.Size = UDim2.fromOffset(240,300)
+	Win.Position = UDim2.fromScale(0.65,0.5)
+	Win.AnchorPoint = Vector2.new(0.5,0.5)
+	Win.BackgroundColor3 = Color3.fromRGB(25,25,25)
+	Win.BorderSizePixel = 0
+	Instance.new("UICorner", Win)
+
+	-- TITLE
+	local Title = Instance.new("TextLabel", Win)
+	Title.Size = UDim2.new(1,-40,0,30)
+	Title.Position = UDim2.fromOffset(10,0)
+	Title.Text = "🌀 MORPHS AURA"
+	Title.Font = Enum.Font.GothamBold
+	Title.TextSize = 13
+	Title.TextColor3 = Color3.new(1,1,1)
+	Title.BackgroundTransparency = 1
+	drag(Win, Title)
+
+	-- CLOSE
+	local Close = Instance.new("TextButton", Win)
+	Close.Size = UDim2.fromOffset(26,26)
+	Close.Position = UDim2.fromOffset(204,2)
+	Close.Text = "X"
+	Close.Font = Enum.Font.GothamBold
+	Close.TextSize = 12
+	Close.TextColor3 = Color3.new(1,1,1)
+	Close.BackgroundColor3 = Color3.fromRGB(140,0,0)
+	Instance.new("UICorner", Close)
+	Close.MouseButton1Click:Connect(function()
+		MorphWindow = nil
+		Win:Destroy()
+	end)
+
+	-- SEARCH
+	local Search = Instance.new("TextBox", Win)
+	Search.Size = UDim2.fromOffset(200,26)
+	Search.Position = UDim2.fromOffset(10,34)
+	Search.PlaceholderText = "🔍 Search morph..."
+	Search.Text = ""
+	Search.Font = Enum.Font.Gotham
+	Search.TextSize = 11
+	Search.TextColor3 = Color3.new(1,1,1)
+	Search.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	Search.BorderSizePixel = 0
+	Instance.new("UICorner", Search)
+
+	-- REFRESH
+	local Refresh = Instance.new("TextButton", Win)
+	Refresh.Size = UDim2.fromOffset(26,26)
+	Refresh.Position = UDim2.fromOffset(214,34)
+	Refresh.Text = "⟳"
+	Refresh.Font = Enum.Font.GothamBold
+	Refresh.TextSize = 14
+	Refresh.TextColor3 = Color3.new(1,1,1)
+	Refresh.BackgroundColor3 = Color3.fromRGB(70,110,160)
+	Instance.new("UICorner", Refresh)
+
+	-- SCROLL
+	local Scroll = Instance.new("ScrollingFrame", Win)
+	Scroll.Position = UDim2.fromOffset(10,66)
+	Scroll.Size = UDim2.fromOffset(220,220)
+	Scroll.ScrollBarThickness = 5
+	Scroll.BackgroundColor3 = Color3.fromRGB(35,35,35)
+	Scroll.BorderSizePixel = 0
+	Instance.new("UICorner", Scroll)
+
+	local Layout = Instance.new("UIListLayout", Scroll)
+	Layout.Padding = UDim.new(0,6)
+
+	local function build(filter)
+		for _,c in ipairs(Scroll:GetChildren()) do
+			if c:IsA("TextButton") then c:Destroy() end
+		end
+
+		filter = (filter or ""):lower()
+
+		for m,_ in pairs(getgenv().collectedMorphs or {}) do
+			-- just ensure table exists
+		end
+
+		local folder = workspace:FindFirstChild("Morphs")
+		if not folder then return end
+
+		for _,m in ipairs(folder:GetChildren()) do
+			if filter ~= "" and not m.Name:lower():find(filter) then
+				continue
+			end
+
+			local cf = getgenv().getModelCFrame(m)
+			if not cf then continue end
+
+			local b = Instance.new("TextButton", Scroll)
+			b.Size = UDim2.fromOffset(210,28)
+			b.Text = m.Name
+			b.Font = Enum.Font.Gotham
+			b.TextSize = 11
+			b.TextColor3 = Color3.new(1,1,1)
+			b.BorderSizePixel = 0
+
+			b.BackgroundColor3 =
+				getgenv().collectedMorphs[m]
+				and Color3.fromRGB(70,140,70)
+				or Color3.fromRGB(60,60,60)
+
+			Instance.new("UICorner", b)
+
+			b.MouseButton1Click:Connect(function()
+				if getgenv().collectedMorphs[m] then return end
+
+				b.BackgroundColor3 = Color3.fromRGB(200,170,60)
+
+				local back = HRP.CFrame
+				getgenv().safeTP(cf)
+				task.wait(0.25)
+				getgenv().pressE()
+				task.wait(0.25)
+				getgenv().safeTP(back)
+
+				getgenv().collectedMorphs[m] = true
+				b.BackgroundColor3 = Color3.fromRGB(70,140,70)
+			end)
+		end
+	end
+
+	build()
+
+	Search:GetPropertyChangedSignal("Text"):Connect(function()
+		build(Search.Text)
+	end)
+
+	Refresh.MouseButton1Click:Connect(function()
+		build(Search.Text)
+	end)
+end
 
 
 btn("❌ CLOSE UI",function()
