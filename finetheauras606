@@ -1,9 +1,13 @@
 --========================
 -- UI ROOT
 --========================
-local gui = Instance.new("ScreenGui", Player.PlayerGui)
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local Player = Players.LocalPlayer
+local gui = Instance.new("ScreenGui")
 gui.Name = "OsakaUI"
 gui.ResetOnSpawn = false
+gui.Parent = Player:WaitForChild("PlayerGui")
 
 --========================
 -- MAIN FRAME
