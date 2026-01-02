@@ -158,12 +158,6 @@ createButton("🌀 MORPHS AURA", function()
 	end)
 end)
 
---==================================================
--- ❌ CLOSE ALL UI
---==================================================
-createButton("❌ CLOSE", function(btn)
-	closeAllUI()
-end)
 
 
 
