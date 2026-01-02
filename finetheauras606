@@ -93,7 +93,11 @@ btn("🌀 AUTO FIND MORPH",function(b)
 	getgenv().AUTO_FIND_MORPH_ALL = not getgenv().AUTO_FIND_MORPH_ALL
 	b.BackgroundColor3 = getgenv().AUTO_FIND_MORPH_ALL and Color3.fromRGB(90,140,200) or Color3.fromRGB(70,70,70)
 end)
-
+btn("🌀 MORPHS AURA WINDOW", function()
+	if getgenv().OPEN_MORPH_WINDOW then
+		getgenv().OPEN_MORPH_WINDOW()
+	end
+end)
 
 --==================================================
 -- 🌀 MORPHS AURA WINDOW (SEARCH + REFRESH FIX)
