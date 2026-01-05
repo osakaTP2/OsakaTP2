@@ -1,6 +1,3 @@
---==================================================
--- OSAKA UI
---==================================================
 
 --==================================================
 -- GLOBAL FLAGS
@@ -67,7 +64,7 @@ ToggleBtn.MouseButton1Click:Connect(function()
 end)
 
 --==================================================
--- UNIVERSAL DRAG SYSTEM (PC + MOBILE) [FIXED]
+-- DRAG 
 --==================================================
 
 local UIS = game:GetService("UserInputService")
@@ -89,7 +86,7 @@ local function Update(input)
 	)
 end
 
--- INPUT MOVE (สำคัญมาก)
+
 UIS.InputChanged:Connect(function(input)
 	if Dragging and (
 		input.UserInputType == Enum.UserInputType.MouseMovement
@@ -131,7 +128,8 @@ Title.Font = Enum.Font.GothamBold
 Title.TextSize = 14
 Title.TextColor3 = Color3.new(1,1,1)
 Title.BackgroundTransparency = 1
-
+Title.Active = true
+Title.Selectable = true
 ApplyDrag(Main, Title)
 --==================================================
 -- CONTENT
@@ -194,7 +192,8 @@ Title.Font = Enum.Font.GothamBold
 Title.TextSize = 13
 Title.TextColor3 = Color3.new(1,1,1)
 Title.BackgroundTransparency = 1
-
+Title.Active = true
+Title.Selectable = true
 ApplyDrag(Win, Title)
 
 	-- CLOSE
