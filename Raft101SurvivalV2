@@ -66,6 +66,47 @@ ToggleBtn.MouseButton1Click:Connect(function()
 	Main.Visible = OPEN
 end)
 
+--==================================================
+-- DRAG UI (PC + MOBILE)
+--==================================================
+do
+	local dragging = false
+	local dragStart
+	local startPos
+
+	local function update(input)
+		local delta = input.Position - dragStart
+		Main.Position = UDim2.new(
+			startPos.X.Scale, startPos.X.Offset + delta.X,
+			startPos.Y.Scale, startPos.Y.Offset + delta.Y
+		)
+	end
+
+	Title.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch then
+
+			dragging = true
+			dragStart = input.Position
+			startPos = Main.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(input)
+		if dragging and (
+			input.UserInputType == Enum.UserInputType.MouseMovement
+			or input.UserInputType == Enum.UserInputType.Touch
+		) then
+			update(input)
+		end
+	end)
+end
 
 
 --==================================================
@@ -236,61 +277,3 @@ createButton("🚣 TP Boat", function()
 	end
 end)
 print("✅ UI SCRIPT 3 LOADED")
-
---==================================================
--- DRAG UI (PC + MOBILE)
---==================================================
-do
-	local dragging = false
-	local dragStart
-	local startPos
-
-	local function update(input)
-		local delta = input.Position - dragStart
-		Main.Position = UDim2.new(
-			startPos.X.Scale, startPos.X.Offset + delta.X,
-			startPos.Y.Scale, startPos.Y.Offset + delta.Y
-		)
-	end
-
-	Title.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1
-		or input.UserInputType == Enum.UserInputType.Touch then
-
-			dragging = true
-			dragStart = input.Position
-			startPos = Main.Position
-
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					dragging = false
-				end
-			end)
-		end
-	end)
-
-	UIS.InputChanged:Connect(function(input)
-		if dragging and (
-			input.UserInputType == Enum.UserInputType.MouseMovement
-			or input.UserInputType == Enum.UserInputType.Touch
-		) then
-			update(input)
-		end
-	end)
-end
-
-
-
-
-
-
-print("✅ OsakaTP2 UI LOADED")
-
-
-
-
-
-
-
-
-
