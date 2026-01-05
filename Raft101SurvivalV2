@@ -66,33 +66,7 @@ ToggleBtn.MouseButton1Click:Connect(function()
 	Main.Visible = OPEN
 end)
 
---==================================================
--- DRAG
---==================================================
-local function drag(frame, handle)
-	local d, s, p
-	handle.InputBegan:Connect(function(i)
-		if i.UserInputType == Enum.UserInputType.MouseButton1 then
-			d = true
-			s = i.Position
-			p = frame.Position
-		end
-	end)
-	UIS.InputChanged:Connect(function(i)
-		if d and i.UserInputType == Enum.UserInputType.MouseMovement then
-			local dx = i.Position - s
-			frame.Position = UDim2.new(
-				p.X.Scale, p.X.Offset + dx.X,
-				p.Y.Scale, p.Y.Offset + dx.Y
-			)
-		end
-	end)
-	UIS.InputEnded:Connect(function(i)
-		if i.UserInputType == Enum.UserInputType.MouseButton1 then
-			d = false
-		end
-	end)
-end
+
 
 --==================================================
 -- TITLE
@@ -304,7 +278,6 @@ do
 		end
 	end)
 end
-
 
 
 
