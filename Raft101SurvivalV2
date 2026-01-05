@@ -67,51 +67,61 @@ ToggleBtn.MouseButton1Click:Connect(function()
 end)
 
 --==================================================
--- DRAG UI (PC + MOBILE)
+-- UNIVERSAL DRAG SYSTEM (PC + MOBILE)
 --==================================================
-do
-	local dragging = false
-	local dragStart
-	local startPos
 
-	local function update(input)
-		local delta = input.Position - dragStart
-		Main.Position = UDim2.new(
-			startPos.X.Scale, startPos.X.Offset + delta.X,
-			startPos.Y.Scale, startPos.Y.Offset + delta.Y
-		)
+local UIS = game:GetService("UserInputService")
+
+local DraggingFrame = nil
+local DragInput = nil
+local DragStart = nil
+local StartPos = nil
+
+local function Update(input)
+	if not DraggingFrame then return end
+
+	local delta = input.Position - DragStart
+	DraggingFrame.Position = UDim2.new(
+		StartPos.X.Scale,
+		StartPos.X.Offset + delta.X,
+		StartPos.Y.Scale,
+		StartPos.Y.Offset + delta.Y
+	)
+end
+
+UIS.InputChanged:Connect(function(input)
+	if input == DragInput then
+		Update(input)
 	end
+end)
 
-	Title.InputBegan:Connect(function(input)
+--==================================================
+-- APPLY DRAG TO FRAME
+-- frame = หน้าต่าง
+-- handle = จุดที่ลาก (Title Bar)
+--==================================================
+function ApplyDrag(frame, handle)
+	handle.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1
 		or input.UserInputType == Enum.UserInputType.Touch then
 
-			dragging = true
-			dragStart = input.Position
-			startPos = Main.Position
+			DraggingFrame = frame
+			DragInput = input
+			DragStart = input.Position
+			StartPos = frame.Position
 
 			input.Changed:Connect(function()
 				if input.UserInputState == Enum.UserInputState.End then
-					dragging = false
+					DraggingFrame = nil
+					DragInput = nil
 				end
 			end)
-		end
-	end)
-
-	UIS.InputChanged:Connect(function(input)
-		if dragging and (
-			input.UserInputType == Enum.UserInputType.MouseMovement
-			or input.UserInputType == Enum.UserInputType.Touch
-		) then
-			update(input)
 		end
 	end)
 end
 
 
---==================================================
 -- TITLE
---==================================================
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1,0,0,30)
 Title.Text = "OsakaTP2V.1"
@@ -119,8 +129,8 @@ Title.Font = Enum.Font.GothamBold
 Title.TextSize = 14
 Title.TextColor3 = Color3.new(1,1,1)
 Title.BackgroundTransparency = 1
-drag(Main, Title)
 
+ApplyDrag(Main, Title)
 --==================================================
 -- CONTENT
 --==================================================
@@ -173,16 +183,17 @@ getgenv().OPEN_CHEST_WINDOW = function()
 	Win.BorderSizePixel = 0
 	Instance.new("UICorner", Win)
 
-	-- TITLE
-	local Title = Instance.new("TextLabel", Win)
-	Title.Size = UDim2.new(1,-40,0,30)
-	Title.Position = UDim2.fromOffset(10,0)
-	Title.Text = "💼 Chest Window"
-	Title.Font = Enum.Font.GothamBold
-	Title.TextSize = 13
-	Title.TextColor3 = Color3.new(1,1,1)
-	Title.BackgroundTransparency = 1
-	drag(Win, Title)
+-- TITLE
+local Title = Instance.new("TextLabel", Win)
+Title.Size = UDim2.new(1,-40,0,30)
+Title.Position = UDim2.fromOffset(10,0)
+Title.Text = "💼 Chest Window"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 13
+Title.TextColor3 = Color3.new(1,1,1)
+Title.BackgroundTransparency = 1
+
+ApplyDrag(Win, Title)
 
 	-- CLOSE
 	local Close = Instance.new("TextButton", Win)
