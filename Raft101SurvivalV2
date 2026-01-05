@@ -67,18 +67,18 @@ ToggleBtn.MouseButton1Click:Connect(function()
 end)
 
 --==================================================
--- UNIVERSAL DRAG SYSTEM (PC + MOBILE)
+-- UNIVERSAL DRAG SYSTEM (PC + MOBILE) [FIXED]
 --==================================================
 
 local UIS = game:GetService("UserInputService")
 
+local Dragging = false
 local DraggingFrame = nil
-local DragInput = nil
 local DragStart = nil
 local StartPos = nil
 
 local function Update(input)
-	if not DraggingFrame then return end
+	if not Dragging or not DraggingFrame then return end
 
 	local delta = input.Position - DragStart
 	DraggingFrame.Position = UDim2.new(
@@ -89,31 +89,33 @@ local function Update(input)
 	)
 end
 
+-- INPUT MOVE (สำคัญมาก)
 UIS.InputChanged:Connect(function(input)
-	if input == DragInput then
+	if Dragging and (
+		input.UserInputType == Enum.UserInputType.MouseMovement
+		or input.UserInputType == Enum.UserInputType.Touch
+	) then
 		Update(input)
 	end
 end)
 
 --==================================================
--- APPLY DRAG TO FRAME
--- frame = หน้าต่าง
--- handle = จุดที่ลาก (Title Bar)
+-- APPLY DRAG
 --==================================================
 function ApplyDrag(frame, handle)
 	handle.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1
 		or input.UserInputType == Enum.UserInputType.Touch then
 
+			Dragging = true
 			DraggingFrame = frame
-			DragInput = input
 			DragStart = input.Position
 			StartPos = frame.Position
 
 			input.Changed:Connect(function()
 				if input.UserInputState == Enum.UserInputState.End then
+					Dragging = false
 					DraggingFrame = nil
-					DragInput = nil
 				end
 			end)
 		end
