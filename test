@@ -1,0 +1,449 @@
+--====================
+-- SERVICES
+--====================
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+--====================
+-- CHARACTER (RESPAWN SAFE)
+--====================
+local Character, Humanoid, HRP
+local DefaultHipHeight, DefaultAutoRotate, DefaultPlatformStand
+
+local function SetupCharacter(char)
+	Character = char
+	Humanoid = char:WaitForChild("Humanoid")
+	HRP = char:WaitForChild("HumanoidRootPart")
+
+	DefaultHipHeight = Humanoid.HipHeight
+	DefaultAutoRotate = Humanoid.AutoRotate
+	DefaultPlatformStand = Humanoid.PlatformStand
+end
+
+SetupCharacter(Player.Character or Player.CharacterAdded:Wait())
+Player.CharacterAdded:Connect(function(char)
+	task.wait(0.4)
+	SetupCharacter(char)
+end)
+
+--====================
+-- TARGET + REMOTE
+--====================
+local TargetFolder = workspace:WaitForChild("AI/Player")
+
+local AttackRemote =
+	ReplicatedStorage
+	:WaitForChild("BridgeNet2")
+	:WaitForChild("dataRemoteEvent")
+
+local function FireAttack()
+	AttackRemote:FireServer({ "NormalAttack", "\n" })
+end
+
+--====================
+-- STATE
+--====================
+local AutoAttack = false
+local SelectedTarget = nil
+local NoClip = false
+local BV
+
+--====================
+-- NO CLIP
+--====================
+RunService.Stepped:Connect(function()
+	if NoClip and Character then
+		for _, v in ipairs(Character:GetDescendants()) do
+			if v:IsA("BasePart") then
+				v.CanCollide = false
+			end
+		end
+	end
+end)
+
+--====================
+-- BODY VELOCITY
+--====================
+local function EnableBV()
+	if BV or not HRP then return end
+	BV = Instance.new("BodyVelocity")
+	BV.MaxForce = Vector3.new(1e9,1e9,1e9)
+	BV.Velocity = Vector3.zero
+	BV.Parent = HRP
+end
+
+local function DisableBV()
+	if BV then
+		BV:Destroy()
+		BV = nil
+	end
+end
+
+--====================
+-- TARGET SCAN
+--====================
+local function GetTargetNames()
+	local names = {}
+	local added = {} -- ใส่ไว้ local เพื่อไม่ทับ scope เดิม
+
+	-- AI / Player / Monster / Human
+	for _, m in ipairs(TargetFolder:GetChildren()) do
+		if m:IsA("Model") and m:FindFirstChild("Humanoid") then
+			local name = m.Name
+			if name:lower():find("human") then
+				name = "Human"
+			end
+			if not added[name] then
+				added[name] = true
+				table.insert(names, name)
+			end
+		end
+	end
+
+	-- Boss Folder
+	local BossFolder = TargetFolder:FindFirstChild("Boss")
+	if BossFolder then
+		for _, boss in ipairs(BossFolder:GetChildren()) do
+			if boss:IsA("Model") and boss:FindFirstChild("Humanoid") then
+				local bossName = "[BOSS] "..boss.Name
+				if not added[bossName] then
+					added[bossName] = true
+					table.insert(names, bossName)
+				end
+			end
+		end
+	end
+
+	return names
+end
+
+
+
+
+local function GetTargets(name)
+	local t = {}
+	for _, m in ipairs(TargetFolder:GetChildren()) do
+		if m:IsA("Model") and m:FindFirstChild("Humanoid") then
+			if name == "Human" then
+				if m.Name:lower():find("human") then
+					table.insert(t, m)
+				end
+			elseif m.Name == name then
+				table.insert(t, m)
+			end
+		end
+	end
+	return t
+end
+
+--====================
+-- ATTACK LOGIC
+--====================
+local function AttackTarget(model)
+	local hum = model:FindFirstChild("Humanoid")
+	local root = model:FindFirstChild("HumanoidRootPart")
+	if not hum or not root then return end
+
+	local _, size = model:GetBoundingBox()
+	local depth = (size.Y / 2) + 3
+
+	while AutoAttack and hum.Health > 0 do
+		HRP.CFrame =
+			root.CFrame
+			* CFrame.new(0, -depth, 0)
+			* CFrame.Angles(math.rad(90), 0, math.rad(90))
+
+		Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+		FireAttack()
+		RunService.Heartbeat:Wait()
+	end
+end
+
+task.spawn(function()
+	while true do
+		if AutoAttack and SelectedTarget then
+			for _, target in ipairs(GetTargets(SelectedTarget)) do
+				if not AutoAttack then break end
+				AttackTarget(target)
+			end
+		end
+		task.wait(1)
+	end
+end)
+
+--==================================================
+-- UI HELPERS
+--==================================================
+local function Corner(obj, r)
+	local c = Instance.new("UICorner", obj)
+	c.CornerRadius = UDim.new(0, r)
+end
+
+local function Stroke(obj)
+	local s = Instance.new("UIStroke", obj)
+	s.Thickness = 1.8
+	s.Color = Color3.fromRGB(80,80,80)
+end
+
+--==================================================
+-- SCREEN GUI
+--==================================================
+local ScreenGui = Instance.new("ScreenGui", PlayerGui)
+ScreenGui.Name = "OsakaTP2"
+ScreenGui.ResetOnSpawn = false
+
+-- TOGGLE
+local ToggleBtn = Instance.new("TextButton", ScreenGui)
+ToggleBtn.Size = UDim2.fromOffset(46,46)
+ToggleBtn.Position = UDim2.fromOffset(14,14)
+ToggleBtn.Text = "≡"
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextSize = 26
+ToggleBtn.TextColor3 = Color3.new(1,1,1)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+ToggleBtn.BorderSizePixel = 0
+ToggleBtn.ZIndex = 10
+Corner(ToggleBtn, 100)
+
+-- MAIN WINDOW
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.fromOffset(280,360)
+Main.Position = UDim2.fromScale(0.5,0.5)
+Main.AnchorPoint = Vector2.new(0.5,0.5)
+Main.BackgroundColor3 = Color3.fromRGB(30,30,30)
+Main.BorderSizePixel = 0
+Main.ZIndex = 5
+Main.ClipsDescendants = true
+Corner(Main, 16)
+Stroke(Main)
+
+-- TITLE BAR
+local TitleBar = Instance.new("Frame", Main)
+TitleBar.Size = UDim2.new(1,0,0,44)
+TitleBar.BackgroundColor3 = Color3.fromRGB(30,30,30)
+TitleBar.BorderSizePixel = 0
+TitleBar.ZIndex = 6
+Corner(TitleBar,16)
+
+local TitleText = Instance.new("TextLabel", TitleBar)
+TitleText.Size = UDim2.new(1,-20,1,0)
+TitleText.Position = UDim2.fromOffset(10,0)
+TitleText.BackgroundTransparency = 1
+TitleText.Text = "OsakaTP2 - Auto Attack"
+TitleText.Font = Enum.Font.GothamBold
+TitleText.TextSize = 18
+TitleText.TextColor3 = Color3.new(1,1,1)
+TitleText.TextXAlignment = Enum.TextXAlignment.Left
+TitleText.ZIndex = 7
+
+-- DRAG (PC + MOBILE)
+do
+	local dragging, dragStart, startPos
+
+	TitleBar.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = Main.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if dragging and (
+			input.UserInputType == Enum.UserInputType.MouseMovement
+			or input.UserInputType == Enum.UserInputType.Touch
+		) then
+			local delta = input.Position - dragStart
+			Main.Position = UDim2.new(
+				startPos.X.Scale, startPos.X.Offset + delta.X,
+				startPos.Y.Scale, startPos.Y.Offset + delta.Y
+			)
+		end
+	end)
+end
+
+-- CONTENT
+local Content = Instance.new("Frame", Main)
+Content.Position = UDim2.fromOffset(10,54)
+Content.Size = UDim2.new(1,-20,1,-64)
+Content.BackgroundColor3 = Color3.fromRGB(40,40,40)
+Content.BorderSizePixel = 0
+Content.ZIndex = 6
+Corner(Content,10)
+
+-- TARGET LABEL
+local TargetLabel = Instance.new("TextLabel", Content)
+TargetLabel.Size = UDim2.new(1,-16,0,34)
+TargetLabel.Position = UDim2.fromOffset(8,10)
+TargetLabel.Text = "TARGET : NONE"
+TargetLabel.Font = Enum.Font.GothamBold
+TargetLabel.TextSize = 14
+TargetLabel.TextColor3 = Color3.new(1,1,1)
+TargetLabel.BackgroundColor3 = Color3.fromRGB(60,60,60)
+TargetLabel.BorderSizePixel = 0
+TargetLabel.ZIndex = 7
+Corner(TargetLabel,8)
+
+-- TARGET BUTTON
+local TargetBtn = Instance.new("TextButton", Content)
+TargetBtn.Size = UDim2.new(1,-16,0,38)
+TargetBtn.Position = UDim2.fromOffset(8,54)
+TargetBtn.Text = "👥 Player / AI List"
+TargetBtn.Font = Enum.Font.GothamBold
+TargetBtn.TextSize = 15
+TargetBtn.TextColor3 = Color3.new(1,1,1)
+TargetBtn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+TargetBtn.BorderSizePixel = 0
+TargetBtn.ZIndex = 7
+Corner(TargetBtn,10)
+
+-- AUTO ATTACK BUTTON
+local AttackBtn = Instance.new("TextButton", Content)
+AttackBtn.Size = UDim2.new(1,-16,0,42)
+AttackBtn.Position = UDim2.fromOffset(8,104)
+AttackBtn.Text = "AUTO ATTACK : OFF"
+AttackBtn.Font = Enum.Font.GothamBold
+AttackBtn.TextSize = 16
+AttackBtn.TextColor3 = Color3.new(1,1,1)
+AttackBtn.BackgroundColor3 = Color3.fromRGB(120,30,30)
+AttackBtn.BorderSizePixel = 0
+AttackBtn.ZIndex = 7
+Corner(AttackBtn,12)
+
+--==================================================
+-- TARGET POPUP
+--==================================================
+local Popup = Instance.new("Frame", ScreenGui)
+Popup.Size = UDim2.fromOffset(260,360)
+Popup.Position = UDim2.fromScale(0.5,0.5)
+Popup.AnchorPoint = Vector2.new(0.5,0.5)
+Popup.BackgroundColor3 = Color3.fromRGB(30,30,30)
+Popup.BorderSizePixel = 0
+Popup.Visible = false
+Popup.ZIndex = 20
+Popup.ClipsDescendants = true
+Corner(Popup,16)
+Stroke(Popup)
+
+local PopupTitle = Instance.new("TextLabel", Popup)
+PopupTitle.Size = UDim2.new(1,-20,0,42)
+PopupTitle.Position = UDim2.fromOffset(10,10)
+PopupTitle.Text = "Target List"
+PopupTitle.Font = Enum.Font.GothamBold
+PopupTitle.TextSize = 16
+PopupTitle.TextColor3 = Color3.new(1,1,1)
+PopupTitle.BackgroundTransparency = 1
+
+local SearchBox = Instance.new("TextBox", Popup)
+SearchBox.Size = UDim2.new(1,-20,0,34)
+SearchBox.Position = UDim2.fromOffset(10,56)
+SearchBox.PlaceholderText = "Search..."
+SearchBox.Font = Enum.Font.Gotham
+SearchBox.TextSize = 14
+SearchBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
+SearchBox.TextColor3 = Color3.new(1,1,1)
+Corner(SearchBox,8)
+
+local List = Instance.new("ScrollingFrame", Popup)
+List.Position = UDim2.fromOffset(10,100)
+List.Size = UDim2.new(1,-20,1,-110)
+List.CanvasSize = UDim2.new()
+List.ScrollBarThickness = 6
+List.BackgroundTransparency = 1
+
+local function RefreshList(filter)
+	List:ClearAllChildren() -- ล้างก่อน
+	local added = {}
+
+	for _, name in ipairs(GetTargetNames()) do
+		if not filter or name:lower():find(filter:lower()) then
+			if not added[name] then
+				added[name] = true
+
+				local btn = Instance.new("TextButton", List)
+				btn.Size = UDim2.new(1,-6,0,34)
+				btn.Text = name
+				btn.Font = Enum.Font.Gotham
+				btn.TextSize = 14
+				btn.TextColor3 = Color3.new(1,1,1)
+
+				-- Background ตามชนิด
+				if name:find("%[BOSS%]") then
+					btn.BackgroundColor3 = Color3.fromRGB(200,50,50) -- Boss สีแดง
+				elseif name == "Human" then
+					btn.BackgroundColor3 = Color3.fromRGB(50,100,200) -- Human สีฟ้า
+				else
+					btn.BackgroundColor3 = Color3.fromRGB(50,150,50) -- AI / Monster สีเขียว
+				end
+
+				Corner(btn,8)
+
+				btn.MouseButton1Click:Connect(function()
+					SelectedTarget = name
+					TargetLabel.Text = "TARGET : "..name
+					Popup.Visible = false
+				end)
+			end
+		end
+	end
+end
+
+
+
+	List.CanvasSize = UDim2.new(0,0,0,y)
+end
+
+SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+	RefreshList(SearchBox.Text)
+end)
+
+TargetBtn.MouseButton1Click:Connect(function()
+	Popup.Visible = true
+	RefreshList()
+end)
+
+--==================================================
+-- BUTTON LOGIC
+--==================================================
+ToggleBtn.MouseButton1Click:Connect(function()
+	Main.Visible = not Main.Visible
+end)
+
+AttackBtn.MouseButton1Click:Connect(function()
+	AutoAttack = not AutoAttack
+	NoClip = AutoAttack
+
+	if AutoAttack then
+		EnableBV()
+		Humanoid.HipHeight = -3.5
+		Humanoid.AutoRotate = false
+		Humanoid.PlatformStand = true
+	else
+		DisableBV()
+		NoClip = false
+		Humanoid.HipHeight = DefaultHipHeight
+		Humanoid.AutoRotate = DefaultAutoRotate
+		Humanoid.PlatformStand = DefaultPlatformStand
+		Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+	end
+
+	AttackBtn.Text = "AUTO ATTACK : "..(AutoAttack and "ON" or "OFF")
+	AttackBtn.BackgroundColor3 =
+		AutoAttack and Color3.fromRGB(30,120,30)
+		or Color3.fromRGB(120,30,30)
+end)
+
+
+
