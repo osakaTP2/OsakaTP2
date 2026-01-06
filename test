@@ -1,6 +1,5 @@
 --==================================================
--- OSAKATP2 | AUTO ATTACK FULL SYSTEM
--- UI + LOGIC | DRAG PC/MOBILE | POPUP TARGET
+-- OSAKA TP2 | FULL SYSTEM (PLAYER/AI LIST + AUTO)
 --==================================================
 
 --====================
@@ -8,58 +7,42 @@
 --====================
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
+local Workspace = game:GetService("Workspace")
 local Player = Players.LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
 
 --====================
 -- CHARACTER (RESPAWN SAFE)
 --====================
 local Character, Humanoid, HRP
-local DefaultHipHeight, DefaultAutoRotate, DefaultPlatformStand
+local DefaultHipHeight, DefaultAutoRotate
 
-local function SetupCharacter(char)
+local function SetupChar(char)
 	Character = char
 	Humanoid = char:WaitForChild("Humanoid")
 	HRP = char:WaitForChild("HumanoidRootPart")
-
 	DefaultHipHeight = Humanoid.HipHeight
 	DefaultAutoRotate = Humanoid.AutoRotate
-	DefaultPlatformStand = Humanoid.PlatformStand
 end
 
-SetupCharacter(Player.Character or Player.CharacterAdded:Wait())
+SetupChar(Player.Character or Player.CharacterAdded:Wait())
 Player.CharacterAdded:Connect(function(char)
-	task.wait(0.4)
-	SetupCharacter(char)
+	task.wait(0.5)
+	SetupChar(char)
 end)
-
---====================
--- TARGET + REMOTE
---====================
-local TargetFolder = workspace:WaitForChild("AI/Player")
-
-local AttackRemote =
-	ReplicatedStorage
-	:WaitForChild("BridgeNet2")
-	:WaitForChild("dataRemoteEvent")
-
-local function FireAttack()
-	AttackRemote:FireServer({ "NormalAttack", "\n" })
-end
 
 --====================
 -- STATE
 --====================
+local SelectedTargetName = nil
 local AutoAttack = false
-local SelectedTarget = nil
+local AutoUpgrade = false
+local SelectedUpgrade = "Damage"
 local NoClip = false
-local BV
+local BV = nil
 
 --====================
--- NO CLIP
+-- NOCLIP
 --====================
 RunService.Stepped:Connect(function()
 	if NoClip and Character then
@@ -71,9 +54,6 @@ RunService.Stepped:Connect(function()
 	end
 end)
 
---====================
--- BODY VELOCITY
---====================
 local function EnableBV()
 	if BV or not HRP then return end
 	BV = Instance.new("BodyVelocity")
@@ -90,55 +70,30 @@ local function DisableBV()
 end
 
 --====================
--- TARGET SCAN
+-- ATTACK REMOTE
 --====================
-local function GetTargetNames()
-	local names = {}
-	local added = {} -- ใส่ไว้ local เพื่อไม่ทับ scope เดิม
-
-	-- AI / Player / Monster / Human
-	for _, m in ipairs(TargetFolder:GetChildren()) do
-		if m:IsA("Model") and m:FindFirstChild("Humanoid") then
-			local name = m.Name
-			if name:lower():find("human") then
-				name = "Human"
-			end
-			if not added[name] then
-				added[name] = true
-				table.insert(names, name)
-			end
-		end
-	end
-
-	-- Boss Folder
-	local BossFolder = TargetFolder:FindFirstChild("Boss")
-	if BossFolder then
-		for _, boss in ipairs(BossFolder:GetChildren()) do
-			if boss:IsA("Model") and boss:FindFirstChild("Humanoid") then
-				local bossName = "[BOSS] "..boss.Name
-				if not added[bossName] then
-					added[bossName] = true
-					table.insert(names, bossName)
-				end
-			end
-		end
-	end
-
-	return names
+local function FireAttack()
+	ReplicatedStorage:WaitForChild("BridgeNet2")
+		:WaitForChild("dataRemoteEvent")
+		:FireServer({
+			"NormalAttack",
+			"\n"
+		})
 end
 
+--====================
+-- TARGET LIST
+--====================
+local function GetTargetModels(name)
+	local folder = Workspace:FindFirstChild("AI/Player")
+	if not folder then return {} end
 
-
-
-local function GetTargets(name)
 	local t = {}
-	for _, m in ipairs(TargetFolder:GetChildren()) do
-		if m:IsA("Model") and m:FindFirstChild("Humanoid") then
-			if name == "Human" then
-				if m.Name:lower():find("human") then
-					table.insert(t, m)
-				end
-			elseif m.Name == name then
+	for _, m in ipairs(folder:GetChildren()) do
+		if m:IsA("Model") and m.Name == name then
+			local hum = m:FindFirstChild("Humanoid")
+			local root = m:FindFirstChild("HumanoidRootPart")
+			if hum and root and hum.Health > 0 then
 				table.insert(t, m)
 			end
 		end
@@ -147,342 +102,251 @@ local function GetTargets(name)
 end
 
 --====================
--- ATTACK LOGIC
+-- ATTACK TARGET
 --====================
 local function AttackTarget(model)
 	local hum = model:FindFirstChild("Humanoid")
 	local root = model:FindFirstChild("HumanoidRootPart")
 	if not hum or not root then return end
 
-	local _, size = model:GetBoundingBox()
-	local depth = (size.Y / 2) + 3
+	NoClip = true
+	EnableBV()
+
+	Humanoid.PlatformStand = true
+	Humanoid.AutoRotate = false
+	Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
 
 	while AutoAttack and hum.Health > 0 do
 		HRP.CFrame =
 			root.CFrame
-			* CFrame.new(0, -depth, 0)
-			* CFrame.Angles(math.rad(90), 0, math.rad(90))
+			* CFrame.new(0, -4, 0)
+			* CFrame.Angles(math.rad(180), 0, math.rad(180))
 
-		Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
 		FireAttack()
-		RunService.Heartbeat:Wait()
+		task.wait(0.15)
 	end
+end
+
+--====================
+-- AUTO ATTACK LOOP
+--====================
+task.spawn(function()
+	while true do
+		if AutoAttack and SelectedTargetName then
+			for _, t in ipairs(GetTargetModels(SelectedTargetName)) do
+				if not AutoAttack then break end
+				AttackTarget(t)
+				task.wait(math.random(3,5))
+			end
+		end
+		task.wait(0.1)
+	end
+end)
+
+--====================
+-- AUTO UPGRADE
+--====================
+local function FireUpgrade(stat)
+	ReplicatedStorage:WaitForChild("BridgeNet2")
+		:WaitForChild("dataRemoteEvent")
+		:FireServer({
+			{
+				{ stat, 1 },
+				"\003"
+			}
+		})
 end
 
 task.spawn(function()
 	while true do
-		if AutoAttack and SelectedTarget then
-			for _, target in ipairs(GetTargets(SelectedTarget)) do
-				if not AutoAttack then break end
-				AttackTarget(target)
-			end
+		if AutoUpgrade then
+			FireUpgrade(SelectedUpgrade)
 		end
-		task.wait(1)
+		task.wait(0.25)
 	end
 end)
 
---==================================================
--- UI HELPERS
---==================================================
-local function Corner(obj, r)
-	local c = Instance.new("UICorner", obj)
-	c.CornerRadius = UDim.new(0, r)
-end
-
-local function Stroke(obj)
-	local s = Instance.new("UIStroke", obj)
-	s.Thickness = 1.8
-	s.Color = Color3.fromRGB(80,80,80)
-end
-
---==================================================
--- SCREEN GUI
---==================================================
-local ScreenGui = Instance.new("ScreenGui", PlayerGui)
-ScreenGui.Name = "OsakaTP2"
-ScreenGui.ResetOnSpawn = false
-
--- TOGGLE
-local ToggleBtn = Instance.new("TextButton", ScreenGui)
-ToggleBtn.Size = UDim2.fromOffset(46,46)
-ToggleBtn.Position = UDim2.fromOffset(14,14)
-ToggleBtn.Text = "≡"
-ToggleBtn.Font = Enum.Font.GothamBold
-ToggleBtn.TextSize = 26
-ToggleBtn.TextColor3 = Color3.new(1,1,1)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-ToggleBtn.BorderSizePixel = 0
-ToggleBtn.ZIndex = 10
-Corner(ToggleBtn, 100)
-
--- MAIN WINDOW
-local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.fromOffset(280,360)
-Main.Position = UDim2.fromScale(0.5,0.5)
-Main.AnchorPoint = Vector2.new(0.5,0.5)
-Main.BackgroundColor3 = Color3.fromRGB(30,30,30)
-Main.BorderSizePixel = 0
-Main.ZIndex = 5
-Main.ClipsDescendants = true
-Corner(Main, 16)
-Stroke(Main)
-
--- TITLE BAR
-local TitleBar = Instance.new("Frame", Main)
-TitleBar.Size = UDim2.new(1,0,0,44)
-TitleBar.BackgroundColor3 = Color3.fromRGB(30,30,30)
-TitleBar.BorderSizePixel = 0
-TitleBar.ZIndex = 6
-Corner(TitleBar,16)
-
-local TitleText = Instance.new("TextLabel", TitleBar)
-TitleText.Size = UDim2.new(1,-20,1,0)
-TitleText.Position = UDim2.fromOffset(10,0)
-TitleText.BackgroundTransparency = 1
-TitleText.Text = "OsakaTP2 - Auto Attack"
-TitleText.Font = Enum.Font.GothamBold
-TitleText.TextSize = 18
-TitleText.TextColor3 = Color3.new(1,1,1)
-TitleText.TextXAlignment = Enum.TextXAlignment.Left
-TitleText.ZIndex = 7
-
--- DRAG (PC + MOBILE)
-do
-	local dragging, dragStart, startPos
-
-	TitleBar.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1
-		or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = true
-			dragStart = input.Position
-			startPos = Main.Position
-
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					dragging = false
-				end
-			end)
+--====================
+-- QUEST (DYNAMIC REMOTE)
+--====================
+local function GetQuestRemote()
+	for _, v in ipairs(ReplicatedStorage:WaitForChild("Network"):GetChildren()) do
+		if v:IsA("RemoteEvent") then
+			return v
 		end
-	end)
-
-	UserInputService.InputChanged:Connect(function(input)
-		if dragging and (
-			input.UserInputType == Enum.UserInputType.MouseMovement
-			or input.UserInputType == Enum.UserInputType.Touch
-		) then
-			local delta = input.Position - dragStart
-			Main.Position = UDim2.new(
-				startPos.X.Scale, startPos.X.Offset + delta.X,
-				startPos.Y.Scale, startPos.Y.Offset + delta.Y
-			)
-		end
-	end)
+	end
 end
 
--- CONTENT
-local Content = Instance.new("Frame", Main)
-Content.Position = UDim2.fromOffset(10,54)
-Content.Size = UDim2.new(1,-20,1,-64)
-Content.BackgroundColor3 = Color3.fromRGB(40,40,40)
-Content.BorderSizePixel = 0
-Content.ZIndex = 6
-Corner(Content,10)
+local function RequestQuest(folder)
+	local remote = GetQuestRemote()
+	if not remote then return end
 
--- TARGET LABEL
-local TargetLabel = Instance.new("TextLabel", Content)
-TargetLabel.Size = UDim2.new(1,-16,0,34)
-TargetLabel.Position = UDim2.fromOffset(8,10)
-TargetLabel.Text = "TARGET : NONE"
-TargetLabel.Font = Enum.Font.GothamBold
-TargetLabel.TextSize = 14
-TargetLabel.TextColor3 = Color3.new(1,1,1)
-TargetLabel.BackgroundColor3 = Color3.fromRGB(60,60,60)
-TargetLabel.BorderSizePixel = 0
-TargetLabel.ZIndex = 7
-Corner(TargetLabel,8)
+	local quest = ReplicatedStorage
+		.Modules.Client.TalkNpc.Quests
+		:WaitForChild(folder)
+		:WaitForChild("Quest")
 
--- TARGET BUTTON
-local TargetBtn = Instance.new("TextButton", Content)
-TargetBtn.Size = UDim2.new(1,-16,0,38)
-TargetBtn.Position = UDim2.fromOffset(8,54)
-TargetBtn.Text = "👥 Player / AI List"
-TargetBtn.Font = Enum.Font.GothamBold
-TargetBtn.TextSize = 15
-TargetBtn.TextColor3 = Color3.new(1,1,1)
-TargetBtn.BackgroundColor3 = Color3.fromRGB(70,70,70)
-TargetBtn.BorderSizePixel = 0
-TargetBtn.ZIndex = 7
-Corner(TargetBtn,10)
-
--- AUTO ATTACK BUTTON
-local AttackBtn = Instance.new("TextButton", Content)
-AttackBtn.Size = UDim2.new(1,-16,0,42)
-AttackBtn.Position = UDim2.fromOffset(8,104)
-AttackBtn.Text = "AUTO ATTACK : OFF"
-AttackBtn.Font = Enum.Font.GothamBold
-AttackBtn.TextSize = 16
-AttackBtn.TextColor3 = Color3.new(1,1,1)
-AttackBtn.BackgroundColor3 = Color3.fromRGB(120,30,30)
-AttackBtn.BorderSizePixel = 0
-AttackBtn.ZIndex = 7
-Corner(AttackBtn,12)
+	remote:FireServer("RequestQuest", quest)
+end
 
 --====================
--- TARGET POPUP FULL VERSION
+-- STOP ALL (OFF FIX)
 --====================
+local function StopAll()
+	AutoAttack = false
+	NoClip = false
+	DisableBV()
 
--- POPUP FRAME
-local Popup = Instance.new("Frame", ScreenGui)
-Popup.Size = UDim2.fromOffset(260,360)
-Popup.Position = UDim2.fromScale(0.5,0.5)
-Popup.AnchorPoint = Vector2.new(0.5,0.5)
-Popup.BackgroundColor3 = Color3.fromRGB(30,30,30)
-Popup.BorderSizePixel = 0
-Popup.Visible = false
-Popup.ZIndex = 10
-Popup.ClipsDescendants = false
-Corner(Popup,16)
-Stroke(Popup)
+	Humanoid.PlatformStand = false
+	Humanoid.AutoRotate = DefaultAutoRotate
+	Humanoid.HipHeight = DefaultHipHeight
+	Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+	task.wait()
+	Humanoid:ChangeState(Enum.HumanoidStateType.Running)
+end
+
+--==================================================
+-- UI (OSAKA TP2 STYLE)
+--==================================================
+local gui = Instance.new("ScreenGui", Player.PlayerGui)
+gui.Name = "OsakaTP2_UI"
+gui.ResetOnSpawn = false
+
+-- MAIN
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.fromOffset(240, 360)
+main.Position = UDim2.fromScale(0.5,0.5)
+main.AnchorPoint = Vector2.new(0.5,0.5)
+main.BackgroundColor3 = Color3.fromRGB(30,30,30)
+
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,16)
 
 -- TITLE
-local PopupTitle = Instance.new("TextLabel", Popup)
-PopupTitle.Size = UDim2.new(1,-40,0,42)
-PopupTitle.Position = UDim2.fromOffset(10,10)
-PopupTitle.Text = "Target List"
-PopupTitle.Font = Enum.Font.GothamBold
-PopupTitle.TextSize = 16
-PopupTitle.TextColor3 = Color3.new(1,1,1)
-PopupTitle.BackgroundTransparency = 1
-PopupTitle.ZIndex = 12
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.new(1,-20,0,36)
+title.Position = UDim2.fromOffset(10,10)
+title.Text = "OsakaTP2"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+title.TextColor3 = Color3.new(1,1,1)
+title.BackgroundTransparency = 1
 
--- CLOSE BUTTON
-local CloseBtn = Instance.new("TextButton", Popup)
-CloseBtn.Size = UDim2.fromOffset(28,28)
-CloseBtn.Position = UDim2.new(1,-38,0,10)
-CloseBtn.Text = "✕"
-CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.TextSize = 18
-CloseBtn.TextColor3 = Color3.new(1,1,1)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(120,40,40)
-CloseBtn.ZIndex = 12
-Corner(CloseBtn,6)
-CloseBtn.MouseButton1Click:Connect(function()
-	Popup.Visible = false
-end)
-
--- SEARCH BOX
-local SearchBox = Instance.new("TextBox", Popup)
-SearchBox.Size = UDim2.new(1,-20,0,34)
-SearchBox.Position = UDim2.fromOffset(10,56)
-SearchBox.PlaceholderText = "Search..."
-SearchBox.Font = Enum.Font.Gotham
-SearchBox.TextSize = 14
-SearchBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
-SearchBox.TextColor3 = Color3.new(1,1,1)
-SearchBox.ZIndex = 12
-Corner(SearchBox,8)
-
--- SCROLLING FRAME
-local List = Instance.new("ScrollingFrame", Popup)
-List.Position = UDim2.fromOffset(10,100)
-List.Size = UDim2.new(1,-20,1,-110)
-List.BackgroundTransparency = 1
-List.ScrollBarThickness = 6
-List.ZIndex = 13
-List.ClipsDescendants = true
-List.AutomaticCanvasSize = Enum.AutomaticSize.Y  -- สำคัญ!!
-List.CanvasSize = UDim2.new(0,0,0,0)
-
-
--- UI LIST LAYOUT
-local Layout = Instance.new("UIListLayout", List)
-Layout.Padding = UDim.new(0,6)
-Layout.SortOrder = Enum.SortOrder.LayoutOrder
-Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    List.CanvasSize = UDim2.new(0,0,0,Layout.AbsoluteContentSize.Y)
-end)
-
-
-
--- REFRESH FUNCTION
-local function RefreshList(filter)
-    List:ClearAllChildren()
-    for _, name in ipairs(GetTargetNames()) do
-        if not filter or name:lower():find(filter:lower()) then
-            local btn = Instance.new("TextButton", List)
-            btn.Size = UDim2.new(1,0,0,34)  -- ความสูงกำหนดชัดเจน
-            btn.Text = name
-            btn.Font = Enum.Font.Gotham
-            btn.TextSize = 14
-            btn.TextColor3 = Color3.new(1,1,1)
-            btn.ZIndex = 14
-
-            -- สีตามประเภท
-            if name:find("%[BOSS%]") then
-                btn.BackgroundColor3 = Color3.fromRGB(200,50,50)
-            elseif name == "Human" then
-                btn.BackgroundColor3 = Color3.fromRGB(50,100,200)
-            else
-                btn.BackgroundColor3 = Color3.fromRGB(50,150,50)
-            end
-
-            Corner(btn,8)
-
-            btn.MouseButton1Click:Connect(function()
-                SelectedTarget = name
-                TargetLabel.Text = "TARGET : "..name
-                Popup.Visible = false
-            end)
-        end
-    end
+-- BUTTON MAKER
+local function MakeButton(text, y)
+	local b = Instance.new("TextButton", main)
+	b.Size = UDim2.new(1,-40,0,36)
+	b.Position = UDim2.fromOffset(20,y)
+	b.Text = text
+	b.Font = Enum.Font.Gotham
+	b.TextSize = 14
+	b.BackgroundColor3 = Color3.fromRGB(60,60,60)
+	b.TextColor3 = Color3.new(1,1,1)
+	Instance.new("UICorner", b).CornerRadius = UDim.new(0,10)
+	return b
 end
 
+-- 👥 PLAYER / AI LIST
+local listBtn = MakeButton("👥 Player / AI List", 60)
 
--- EVENT: SEARCH BOX
-SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
-	RefreshList(SearchBox.Text)
-end)
-
--- EVENT: OPEN TARGET POPUP
-TargetBtn.MouseButton1Click:Connect(function()
-	Popup.Visible = true
-	RefreshList()
-end)
-
-
-
-
-
---==================================================
--- BUTTON LOGIC
---==================================================
-ToggleBtn.MouseButton1Click:Connect(function()
-	Main.Visible = not Main.Visible
-end)
-
-AttackBtn.MouseButton1Click:Connect(function()
+-- AUTO ATTACK
+local attackBtn = MakeButton("🔘 Auto Attack : OFF", 106)
+attackBtn.MouseButton1Click:Connect(function()
 	AutoAttack = not AutoAttack
-	NoClip = AutoAttack
-
-	if AutoAttack then
-		EnableBV()
-		Humanoid.HipHeight = -3.5
-		Humanoid.AutoRotate = false
-		Humanoid.PlatformStand = true
-	else
-		DisableBV()
-		NoClip = false
-		Humanoid.HipHeight = DefaultHipHeight
-		Humanoid.AutoRotate = DefaultAutoRotate
-		Humanoid.PlatformStand = DefaultPlatformStand
-		Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+	if not AutoAttack then
+		StopAll()
 	end
-
-	AttackBtn.Text = "AUTO ATTACK : "..(AutoAttack and "ON" or "OFF")
-	AttackBtn.BackgroundColor3 =
-		AutoAttack and Color3.fromRGB(30,120,30)
-		or Color3.fromRGB(120,30,30)
+	attackBtn.Text = "🔘 Auto Attack : " .. (AutoAttack and "ON" or "OFF")
 end)
 
+-- AUTO UPGRADE
+local upgradeBtn = MakeButton("🔘 Auto Upgrade : OFF", 152)
+upgradeBtn.MouseButton1Click:Connect(function()
+	AutoUpgrade = not AutoUpgrade
+	upgradeBtn.Text = "🔘 Auto Upgrade : " .. (AutoUpgrade and "ON" or "OFF")
+end)
 
+-- UPGRADE SELECT
+local upgradeLabel = MakeButton("📂 Upgrade : Damage", 198)
+upgradeLabel.MouseButton1Click:Connect(function()
+	local order = {"Damage","Durability","Stamina","Speed"}
+	for i,v in ipairs(order) do
+		if v == SelectedUpgrade then
+			SelectedUpgrade = order[i % #order + 1]
+			break
+		end
+	end
+	upgradeLabel.Text = "📂 Upgrade : "..SelectedUpgrade
+end)
 
+-- QUEST
+MakeButton("📜 Quest Lv.1-50", 244).MouseButton1Click:Connect(function()
+	RequestQuest("QuestGiver (Lv.1-Lv.50)")
+end)
+
+MakeButton("📜 Quest Lv.50-150", 290).MouseButton1Click:Connect(function()
+	RequestQuest("QuestGiver (Lv.50-Lv.150)")
+end)
+
+MakeButton("📜 Quest Lv.150-250", 336).MouseButton1Click:Connect(function()
+	RequestQuest("QuestGiver (Lv.150-Lv.250)")
+end)
+
+--==================================================
+-- PLAYER / AI LIST WINDOW
+--==================================================
+local listWin = Instance.new("Frame", gui)
+listWin.Size = UDim2.fromOffset(220,300)
+listWin.Position = UDim2.fromScale(0.7,0.5)
+listWin.AnchorPoint = Vector2.new(0.5,0.5)
+listWin.BackgroundColor3 = Color3.fromRGB(35,35,35)
+listWin.Visible = false
+Instance.new("UICorner", listWin).CornerRadius = UDim.new(0,14)
+
+listBtn.MouseButton1Click:Connect(function()
+	listWin.Visible = not listWin.Visible
+end)
+
+local search = Instance.new("TextBox", listWin)
+search.Size = UDim2.new(1,-20,0,30)
+search.Position = UDim2.fromOffset(10,10)
+search.PlaceholderText = "Search..."
+search.Font = Enum.Font.Gotham
+search.TextSize = 14
+
+local scroll = Instance.new("ScrollingFrame", listWin)
+scroll.Size = UDim2.new(1,-20,1,-60)
+scroll.Position = UDim2.fromOffset(10,50)
+scroll.CanvasSize = UDim2.new()
+scroll.ScrollBarThickness = 6
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+local layout = Instance.new("UIListLayout", scroll)
+layout.Padding = UDim.new(0,6)
+
+local function RefreshList()
+	scroll:ClearAllChildren()
+	layout.Parent = scroll
+
+	local folder = Workspace:FindFirstChild("AI/Player")
+	if not folder then return end
+
+	for _, m in ipairs(folder:GetChildren()) do
+		if search.Text == "" or m.Name:lower():find(search.Text:lower()) then
+			local b = Instance.new("TextButton", scroll)
+			b.Size = UDim2.new(1,0,0,34)
+			b.Text = m.Name
+			b.Font = Enum.Font.Gotham
+			b.TextSize = 14
+			b.BackgroundColor3 = Color3.fromRGB(55,55,55)
+			b.TextColor3 = Color3.new(1,1,1)
+			Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
+
+			b.MouseButton1Click:Connect(function()
+				SelectedTargetName = m.Name
+			end)
+		end
+	end
+end
+
+search:GetPropertyChangedSignal("Text"):Connect(RefreshList)
+RefreshList()
