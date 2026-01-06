@@ -1,3 +1,8 @@
+--==================================================
+-- OSAKATP2 | AUTO ATTACK FULL SYSTEM
+-- UI + LOGIC | DRAG PC/MOBILE | POPUP TARGET
+--==================================================
+
 --====================
 -- SERVICES
 --====================
@@ -322,9 +327,11 @@ AttackBtn.BorderSizePixel = 0
 AttackBtn.ZIndex = 7
 Corner(AttackBtn,12)
 
---==================================================
--- TARGET POPUP
---==================================================
+--====================
+-- TARGET POPUP FULL VERSION
+--====================
+
+-- POPUP FRAME
 local Popup = Instance.new("Frame", ScreenGui)
 Popup.Size = UDim2.fromOffset(260,360)
 Popup.Position = UDim2.fromScale(0.5,0.5)
@@ -332,20 +339,38 @@ Popup.AnchorPoint = Vector2.new(0.5,0.5)
 Popup.BackgroundColor3 = Color3.fromRGB(30,30,30)
 Popup.BorderSizePixel = 0
 Popup.Visible = false
-Popup.ZIndex = 20
-Popup.ClipsDescendants = true
+Popup.ZIndex = 10
+Popup.ClipsDescendants = false
 Corner(Popup,16)
 Stroke(Popup)
 
+-- TITLE
 local PopupTitle = Instance.new("TextLabel", Popup)
-PopupTitle.Size = UDim2.new(1,-20,0,42)
+PopupTitle.Size = UDim2.new(1,-40,0,42)
 PopupTitle.Position = UDim2.fromOffset(10,10)
 PopupTitle.Text = "Target List"
 PopupTitle.Font = Enum.Font.GothamBold
 PopupTitle.TextSize = 16
 PopupTitle.TextColor3 = Color3.new(1,1,1)
 PopupTitle.BackgroundTransparency = 1
+PopupTitle.ZIndex = 12
 
+-- CLOSE BUTTON
+local CloseBtn = Instance.new("TextButton", Popup)
+CloseBtn.Size = UDim2.fromOffset(28,28)
+CloseBtn.Position = UDim2.new(1,-38,0,10)
+CloseBtn.Text = "✕"
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 18
+CloseBtn.TextColor3 = Color3.new(1,1,1)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(120,40,40)
+CloseBtn.ZIndex = 12
+Corner(CloseBtn,6)
+CloseBtn.MouseButton1Click:Connect(function()
+	Popup.Visible = false
+end)
+
+-- SEARCH BOX
 local SearchBox = Instance.new("TextBox", Popup)
 SearchBox.Size = UDim2.new(1,-20,0,34)
 SearchBox.Position = UDim2.fromOffset(10,56)
@@ -354,65 +379,79 @@ SearchBox.Font = Enum.Font.Gotham
 SearchBox.TextSize = 14
 SearchBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
 SearchBox.TextColor3 = Color3.new(1,1,1)
+SearchBox.ZIndex = 12
 Corner(SearchBox,8)
 
+-- SCROLLING FRAME
 local List = Instance.new("ScrollingFrame", Popup)
 List.Position = UDim2.fromOffset(10,100)
 List.Size = UDim2.new(1,-20,1,-110)
-List.CanvasSize = UDim2.new()
-List.ScrollBarThickness = 6
 List.BackgroundTransparency = 1
+List.ScrollBarThickness = 6
+List.ZIndex = 13
+List.ClipsDescendants = true
+List.AutomaticCanvasSize = Enum.AutomaticSize.Y  -- สำคัญ!!
+List.CanvasSize = UDim2.new(0,0,0,0)
 
+
+-- UI LIST LAYOUT
+local Layout = Instance.new("UIListLayout", List)
+Layout.Padding = UDim.new(0,6)
+Layout.SortOrder = Enum.SortOrder.LayoutOrder
+Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    List.CanvasSize = UDim2.new(0,0,0,Layout.AbsoluteContentSize.Y)
+end)
+
+
+
+-- REFRESH FUNCTION
 local function RefreshList(filter)
-	List:ClearAllChildren() -- ล้างก่อน
-	local added = {}
+    List:ClearAllChildren()
+    for _, name in ipairs(GetTargetNames()) do
+        if not filter or name:lower():find(filter:lower()) then
+            local btn = Instance.new("TextButton", List)
+            btn.Size = UDim2.new(1,0,0,34)  -- ความสูงกำหนดชัดเจน
+            btn.Text = name
+            btn.Font = Enum.Font.Gotham
+            btn.TextSize = 14
+            btn.TextColor3 = Color3.new(1,1,1)
+            btn.ZIndex = 14
 
-	for _, name in ipairs(GetTargetNames()) do
-		if not filter or name:lower():find(filter:lower()) then
-			if not added[name] then
-				added[name] = true
+            -- สีตามประเภท
+            if name:find("%[BOSS%]") then
+                btn.BackgroundColor3 = Color3.fromRGB(200,50,50)
+            elseif name == "Human" then
+                btn.BackgroundColor3 = Color3.fromRGB(50,100,200)
+            else
+                btn.BackgroundColor3 = Color3.fromRGB(50,150,50)
+            end
 
-				local btn = Instance.new("TextButton", List)
-				btn.Size = UDim2.new(1,-6,0,34)
-				btn.Text = name
-				btn.Font = Enum.Font.Gotham
-				btn.TextSize = 14
-				btn.TextColor3 = Color3.new(1,1,1)
+            Corner(btn,8)
 
-				-- Background ตามชนิด
-				if name:find("%[BOSS%]") then
-					btn.BackgroundColor3 = Color3.fromRGB(200,50,50) -- Boss สีแดง
-				elseif name == "Human" then
-					btn.BackgroundColor3 = Color3.fromRGB(50,100,200) -- Human สีฟ้า
-				else
-					btn.BackgroundColor3 = Color3.fromRGB(50,150,50) -- AI / Monster สีเขียว
-				end
-
-				Corner(btn,8)
-
-				btn.MouseButton1Click:Connect(function()
-					SelectedTarget = name
-					TargetLabel.Text = "TARGET : "..name
-					Popup.Visible = false
-				end)
-			end
-		end
-	end
+            btn.MouseButton1Click:Connect(function()
+                SelectedTarget = name
+                TargetLabel.Text = "TARGET : "..name
+                Popup.Visible = false
+            end)
+        end
+    end
 end
 
 
-
-	List.CanvasSize = UDim2.new(0,0,0,y)
-end
-
+-- EVENT: SEARCH BOX
 SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
 	RefreshList(SearchBox.Text)
 end)
 
+-- EVENT: OPEN TARGET POPUP
 TargetBtn.MouseButton1Click:Connect(function()
 	Popup.Visible = true
 	RefreshList()
 end)
+
+
+
+
 
 --==================================================
 -- BUTTON LOGIC
