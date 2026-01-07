@@ -37,6 +37,11 @@ function UI.Create(callbacks)
         end
     end)
 
+    local function ToggleAutoMoney(state)
+    if Logic and Logic.ToggleAutoMoney then
+        Logic.ToggleAutoMoney(state)
+        end
+    end
     --==================== WIN TAB =====================
     local GetWinTab = Window:NewTab("Get Win")
     local GetWinSection = GetWinTab:NewSection("Auto Win")
