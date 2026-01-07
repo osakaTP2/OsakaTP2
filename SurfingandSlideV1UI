@@ -1,0 +1,155 @@
+local Library = loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"
+))()
+
+local UI = {}
+
+function UI.Create(callbacks)
+    local Window = Library.CreateLib("OSAKA TP2 | 🍌", "DarkTheme")
+
+    --==================== MONEY TAB ====================
+    local MoneyTab = Window:NewTab("Money")
+    local MoneySection = MoneyTab:NewSection("Get Money")
+
+    MoneySection:NewTextBox(
+        "Money Amount",
+        "ใส่จำนวนเงิน เช่น 99999999",
+        function(text)
+            if callbacks.SetMoneyValue then
+                callbacks.SetMoneyValue(text)
+            end
+        end
+    )
+
+    MoneySection:NewButton("Get Money (Once)", "รับเงิน 1 ครั้ง", function()
+        if callbacks.GetMoney then
+            callbacks.GetMoney()
+        end
+    end)
+
+    MoneySection:NewToggle("Auto Get Money", "เปิด / ปิด ออโต้", function(state)
+        if callbacks.ToggleAutoMoney then
+            callbacks.ToggleAutoMoney(state)
+        end
+    end)
+
+    --==================== WIN TAB =====================
+    local GetWinTab = Window:NewTab("Get Win")
+    local GetWinSection = GetWinTab:NewSection("Auto Win")
+
+    GetWinSection:NewToggle("Get Win (ON / OFF)", "Auto Get Win", function(state)
+        if callbacks.ToggleAutoWin then
+            callbacks.ToggleAutoWin(state)
+        end
+    end)
+
+    --==================== DAILY PET TAB =================
+    local PetTab = Window:NewTab("Daily Inf")
+    local PetSection = PetTab:NewSection("Daily Inf")
+
+    PetSection:NewToggle("Daily Inf", "เปิด / ปิด Auto Best Pet", function(state)
+        if callbacks.ToggleAutoBestPet then
+            callbacks.ToggleAutoBestPet(state)
+        end
+    end)
+
+    --==================== BEST PET EGG TAB =================
+    local BestPetTab = Window:NewTab("Best Pet")
+    local BestPetSection = BestPetTab:NewSection("Auto Egg")
+
+    BestPetSection:NewToggle("Auto Open Best Pet", "เปิดไข่ออโต้ทุก 0.5 วินาที", function(state)
+        if callbacks.ToggleAutoBestPetEgg then
+            callbacks.ToggleAutoBestPetEgg(state)
+        end
+    end)
+
+    --==================== SETTING TAB =================
+    local SettingTab = Window:NewTab("Setting")
+    local SettingSection = SettingTab:NewSection("UI Control")
+
+    SettingSection:NewKeybind(
+        "Toggle UI",
+        "เปิด / ปิด UI",
+        Enum.KeyCode.RightControl,
+        function()
+            Library:ToggleUI()
+        end
+    )
+
+    --==================== FLOATING BUTTON =================
+    local Players = game:GetService("Players")
+    local UserInputService = game:GetService("UserInputService")
+    local Player = Players.LocalPlayer
+    local PlayerGui = Player:WaitForChild("PlayerGui")
+
+    local MenuGui = Instance.new("ScreenGui")
+    MenuGui.Name = "FloatingMenu"
+    MenuGui.ResetOnSpawn = false
+    MenuGui.Parent = PlayerGui
+
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.fromOffset(50, 50)
+    Button.Position = UDim2.fromScale(0.02, 0.45)
+    Button.Text = "🍌"
+    Button.TextSize = 28
+    Button.Font = Enum.Font.GothamBold
+    Button.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Button.AutoButtonColor = true
+    Button.ZIndex = 999
+    Button.Parent = MenuGui
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(1, 0)
+    corner.Parent = Button
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Thickness = 2
+    stroke.Color = Color3.fromRGB(80, 80, 80)
+    stroke.Parent = Button
+
+    Button.MouseButton1Click:Connect(function()
+        Library:ToggleUI()
+    end)
+
+    --==================== DRAG SYSTEM =================
+    local dragging = false
+    local dragStart
+    local startPos
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        Button.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+
+    Button.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = Button.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    Button.InputChanged:Connect(function(input)
+        if dragging and (
+            input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch
+        ) then
+            update(input)
+        end
+    end)
+end
+
+return UI
