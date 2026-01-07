@@ -8,30 +8,32 @@ function UI.Create(callbacks)
     local Window = Library.CreateLib("OSAKA TP2 | 🍌", "DarkTheme")
 
     --==================== MONEY TAB ====================
-    local MoneyTab = Window:NewTab("Money")
-    local MoneySection = MoneyTab:NewSection("Get Money")
+local MoneyTab = Window:NewTab("Money")
+local MoneySection = MoneyTab:NewSection("Get Money")
 
-    MoneySection:NewTextBox(
-        "Money Amount",
-        "ใส่จำนวนเงิน เช่น 99999999",
-        function(text)
-            if callbacks.SetMoneyValue then
-                callbacks.SetMoneyValue(text)
-            end
+MoneySection:NewTextBox(
+    "Money Amount",
+    "ใส่จำนวนเงิน เช่น 99999999",
+    function(text)
+        local value = tonumber(text)
+        if value then
+            MoneyValue = value
+            print("Money set to:", MoneyValue)
+        else
+            warn("Invalid number")
         end
-    )
+    end
+)
 
-    MoneySection:NewButton("Get Money (Once)", "รับเงิน 1 ครั้ง", function()
-        if callbacks.GetMoney then
-            callbacks.GetMoney()
-        end
-    end)
+MoneySection:NewButton("Get Money (Once)", "รับเงิน 1 ครั้ง", function()
+    GetMoney()
+end)
 
-    MoneySection:NewToggle("Auto Get Money", "เปิด / ปิด ออโต้", function(state)
-        if callbacks.ToggleAutoMoney then
-            callbacks.ToggleAutoMoney(state)
-        end
-    end)
+MoneySection:NewToggle("Auto Get Money", "เปิด / ปิด ออโต้", function(state)
+    AutoGetMoney = state
+    print("Auto Get Money:", state)
+end)
+
 
     --==================== WIN TAB =====================
     local GetWinTab = Window:NewTab("Get Win")
