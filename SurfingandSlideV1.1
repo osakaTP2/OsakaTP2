@@ -1,0 +1,96 @@
+--==================================================
+-- OSAKA TP2 | FULL LOADER + UI + LOGIC READY
+--==================================================
+
+
+local successLogic, Logic = pcall(function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/osakaTP2/OsakaTP2/main/SurfingandSlideV1"))()
+end)
+
+if not successLogic or not Logic then
+    warn("Logic")
+    return
+end
+
+
+local successUI, UI = pcall(function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/osakaTP2/OsakaTP2/main/SurfingandSlideV1UI"))()
+end)
+
+if not successUI or not UI then
+    warn("UI return table")
+    return
+end
+
+
+local function ToggleAutoMoney(state)
+    if Logic and Logic.ToggleAutoMoney then
+        Logic.ToggleAutoMoney(state)
+    end
+end
+
+local function SetMoneyValue(value)
+    if Logic and Logic.SetMoneyValue then
+        Logic.SetMoneyValue(tonumber(value))
+    end
+end
+
+local function ToggleAutoWin(state)
+    if Logic and Logic.ToggleAutoWin then
+        Logic.ToggleAutoWin(state)
+    end
+end
+
+local function ToggleAutoBestPet(state)
+    if Logic and Logic.ToggleAutoBestPet then
+        Logic.ToggleAutoBestPet(state)
+    end
+end
+
+local function ToggleAutoBestPetEgg(state)
+    if Logic and Logic.ToggleAutoBestPetEgg then
+        Logic.ToggleAutoBestPetEgg(state)
+    end
+end
+
+local function ToggleAutoSurf(state)
+    if Logic and Logic.ToggleAutoSurf then
+        Logic.ToggleAutoSurf(state)
+    end
+end
+
+local function ToggleAutoSlide(state)
+    if Logic and Logic.ToggleAutoSlide then
+        Logic.ToggleAutoSlide(state)
+    end
+end
+
+local function RunOnce()
+    if Logic and Logic.GetMoney then
+        Logic.GetMoney()
+    end
+end
+
+_G.AutoSurf = false
+_G.AutoSlide = false
+_G.AutoWin = false
+_G.AutoBestPet = false
+_G.AutoBestPetEgg = false
+
+
+UI.Create({
+    ToggleAutoMoney = ToggleAutoMoney,
+    SetMoneyValue = SetMoneyValue,
+    ToggleAutoWin = ToggleAutoWin,
+    ToggleAutoBestPet = ToggleAutoBestPet,
+    ToggleAutoBestPetEgg = ToggleAutoBestPetEgg,
+    ToggleAutoSurf = ToggleAutoSurf,
+    ToggleAutoSlide = ToggleAutoSlide,
+    RunOnce = RunOnce
+})
+
+
+print("✅ OSAKA TP2 UI + Logic ")
+
+
+
