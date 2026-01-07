@@ -30,10 +30,11 @@ MoneySection:NewButton("Get Money (Once)", "รับเงิน 1 ครั้
 end)
 
 MoneySection:NewToggle("Auto Get Money", "เปิด / ปิด ออโต้", function(state)
-    AutoGetMoney = state
-    print("Auto Get Money:", state)
+    -- ส่ง state เข้า Logic
+    if callbacks.ToggleAutoMoney then
+        callbacks.ToggleAutoMoney(state)
+    end
 end)
-
 
     --==================== WIN TAB =====================
     local GetWinTab = Window:NewTab("Get Win")
