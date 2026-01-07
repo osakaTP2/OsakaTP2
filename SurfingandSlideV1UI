@@ -7,11 +7,7 @@ local Library = loadstring(game:HttpGet(
 ))()
 
 local UI = {}
-function UI.Create(callbacks)
-    -- สร้าง Window / Tab / Section / Button / Toggle
-end
 
-return UI 
 function UI.Create(callbacks)
     local Window = Library.CreateLib("OSAKA TP2 | 🍌", "DarkTheme")
 
