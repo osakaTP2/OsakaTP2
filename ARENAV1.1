@@ -1,14 +1,11 @@
 
---==================================================
--- UI.lua
---==================================================
 
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
-local Logic = require(script:WaitForChild("Logic"))
-
+repeat task.wait() until getgenv().OSAKA_LOGIC
+local Logic = getgenv().OSAKA_LOGIC
 --==================================================
 -- KAVO UI
 --==================================================
