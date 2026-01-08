@@ -1,0 +1,143 @@
+
+--==================================================
+-- UI.lua
+--==================================================
+
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+local Logic = require(script:WaitForChild("Logic"))
+
+--==================================================
+-- KAVO UI
+--==================================================
+local Library = loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"
+))()
+
+local Window = Library.CreateLib("OsakaTP2 | 🍌","DarkTheme")
+
+--==================================================
+-- DIAMOND
+--==================================================
+local DiamondTab = Window:NewTab("DIAMOND")
+DiamondTab:NewSection("Diamond")
+    :NewToggle("Auto Pull Diamond","",function(v)
+        Logic.Set("AUTO_PULL", v)
+    end)
+
+--==================================================
+-- FIRE
+--==================================================
+local FireTab = Window:NewTab("FIRE")
+local FireSec = FireTab:NewSection("Fire Sword")
+FireSec:NewToggle("Auto Fire Q","",function(v)
+    Logic.Set("AUTO_FIRE_Q", v)
+end)
+FireSec:NewToggle("Auto Fire X","",function(v)
+    Logic.Set("AUTO_FIRE_X", v)
+end)
+
+--==================================================
+-- CHAOS
+--==================================================
+Window:NewTab("CHAOS")
+    :NewSection("Chaos")
+    :NewToggle("Auto Chaos","",function(v)
+        Logic.Set("AUTO_CHAOS", v)
+    end)
+
+--==================================================
+-- LAVA
+--==================================================
+Window:NewTab("LAVA")
+    :NewSection("Lava")
+    :NewToggle("Auto Lava","",function(v)
+        Logic.Set("AUTO_LAVA", v)
+    end)
+
+--==================================================
+-- LIGHT
+--==================================================
+local LightTab = Window:NewTab("LIGHT")
+local LightSec = LightTab:NewSection("Light Skills")
+LightSec:NewToggle("Auto Light Q","",function(v)
+    Logic.Set("AUTO_LIGHT_Q", v)
+end)
+LightSec:NewToggle("Auto Light Orb","",function(v)
+    Logic.Set("AUTO_LIGHT_ORB", v)
+end)
+
+--==================================================
+-- FLOATING BUTTON + DRAG
+--==================================================
+local MenuGui = Instance.new("ScreenGui")
+MenuGui.Name = "FloatingMenu"
+MenuGui.ResetOnSpawn = false
+MenuGui.Parent = PlayerGui
+
+local Button = Instance.new("TextButton")
+Button.Size = UDim2.fromOffset(50,50)
+Button.Position = UDim2.fromScale(0.12,0.80)
+Button.Text = "🍌"
+Button.TextSize = 28
+Button.Font = Enum.Font.GothamBold
+Button.BackgroundColor3 = Color3.fromRGB(25,25,25)
+Button.TextColor3 = Color3.fromRGB(255,255,255)
+Button.ZIndex = 999
+Button.Parent = MenuGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(1,0)
+corner.Parent = Button
+
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 2
+stroke.Color = Color3.fromRGB(80,80,80)
+stroke.Parent = Button
+
+Button.MouseButton1Click:Connect(function() Library:ToggleUI() end)
+local GuiService = game:GetService("GuiService")
+local inset = GuiService:GetGuiInset()
+
+Button.Position = UDim2.new(
+	0, 12,
+	0, inset.Y + 10
+)
+
+-- Drag
+local dragging = false
+local dragStart
+local startPos
+
+local function update(input)
+	local delta = input.Position - dragStart
+	Button.Position = UDim2.new(
+		startPos.X.Scale,
+		startPos.X.Offset + delta.X,
+		startPos.Y.Scale,
+		startPos.Y.Offset + delta.Y
+	)
+end
+
+Button.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = Button.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+Button.InputChanged:Connect(function(input)
+	if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+		update(input)
+	end
+end)
+
+
