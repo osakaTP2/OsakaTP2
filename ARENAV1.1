@@ -1,60 +1,94 @@
--- ARENAV1.1 (UI ONLY)
 
-if not game:IsLoaded() then game.Loaded:Wait() end
-
--- FLAGS
-_G.AUTO_PULL = false
-_G.AUTO_FIRE_Q = false
-_G.AUTO_FIRE_X = false
-_G.AUTO_CHAOS = false
-_G.AUTO_LAVA = false
-_G.AUTO_LIGHT_Q = false
-_G.AUTO_LIGHT_ORB = false
-
--- KAVO
-local Library = loadstring(game:HttpGet(
-	"https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"
-))()
-
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 local Window = Library.CreateLib("OsakaTP2 | 🍌","DarkTheme")
 
 -- DIAMOND
-local T1 = Window:NewTab("DIAMOND")
-T1:NewSection("Diamond")
-	:NewToggle("Auto Pull","",function(v)
-		_G.AUTO_PULL = v
-	end)
+local DiamondTab = Window:NewTab("DIAMOND")
+local DiamondSection = DiamondTab:NewSection("Diamond Automation")
+DiamondSection:NewToggle("Auto Pull Diamond","Pull nearby diamonds automatically",function(val) AUTO_PULL = val end)
 
 -- FIRE
-local T2 = Window:NewTab("FIRE")
-T2:NewSection("Fire Sword")
-	:NewToggle("Auto Fire Q","",function(v)
-		_G.AUTO_FIRE_Q = v
-	end)
-	:NewToggle("Auto Fire X","",function(v)
-		_G.AUTO_FIRE_X = v
-	end)
+local FireTab = Window:NewTab("FIRE")
+local FireSection = FireTab:NewSection("Fire Sword Skills")
+FireSection:NewToggle("Auto Fire Q","Use Q automatically",function(val) AUTO_FIRE2 = val end)
+FireSection:NewToggle("Auto Fire X","Use X automatically",function(val) AUTO_FIRE3 = val end)
 
 -- CHAOS
-local T3 = Window:NewTab("CHAOS")
-T3:NewSection("Chaos")
-	:NewToggle("Auto Chaos","",function(v)
-		_G.AUTO_CHAOS = v
-	end)
+local ChaosTab = Window:NewTab("CHAOS")
+local ChaosSection = ChaosTab:NewSection("Chaos Skills")
+ChaosSection:NewToggle("Auto Chaos Attack","Attack nearby players automatically",function(val) AUTO_CHAOS = val end)
 
 -- LAVA
-local T4 = Window:NewTab("LAVA")
-T4:NewSection("Lava")
-	:NewToggle("Auto Lava","",function(v)
-		_G.AUTO_LAVA = v
-	end)
+local LavaTab = Window:NewTab("LAVA")
+local LavaSection = LavaTab:NewSection("Lava Skills")
+LavaSection:NewToggle("Auto Lava","Activate Lava Skill automatically",function(val) AUTO_LAVA = val end)
 
 -- LIGHT
-local T5 = Window:NewTab("LIGHT")
-T5:NewSection("Light")
-	:NewToggle("Auto Light Q","",function(v)
-		_G.AUTO_LIGHT_Q = v
-	end)
-	:NewToggle("Auto Light Orb","",function(v)
-		_G.AUTO_LIGHT_ORB = v
-	end)
+local LightTab = Window:NewTab("LIGHT")
+local LightSection = LightTab:NewSection("Light Skills")
+LightSection:NewToggle("Auto Light Q","Teleport + Q multiple times",function(val) AUTO_LIGHT_Q = val end)
+LightSection:NewToggle("Auto Light Orb","Fire Light Orb automatically",function(val) AUTO_LIGHT_ORB = val end)
+
+--==================================================
+-- FLOATING BUTTON + DRAG
+--==================================================
+local MenuGui = Instance.new("ScreenGui")
+MenuGui.Name = "FloatingMenu"
+MenuGui.ResetOnSpawn = false
+MenuGui.Parent = PlayerGui
+
+local Button = Instance.new("TextButton")
+Button.Size = UDim2.fromOffset(50,50)
+Button.Position = UDim2.fromScale(0.12,0.80)
+Button.Text = "🍌"
+Button.TextSize = 28
+Button.Font = Enum.Font.GothamBold
+Button.BackgroundColor3 = Color3.fromRGB(25,25,25)
+Button.TextColor3 = Color3.fromRGB(255,255,255)
+Button.ZIndex = 999
+Button.Parent = MenuGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(1,0)
+corner.Parent = Button
+
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 2
+stroke.Color = Color3.fromRGB(80,80,80)
+stroke.Parent = Button
+
+Button.MouseButton1Click:Connect(function() Library:ToggleUI() end)
+
+-- Drag
+local dragging = false
+local dragStart
+local startPos
+
+local function update(input)
+	local delta = input.Position - dragStart
+	Button.Position = UDim2.new(
+		startPos.X.Scale,
+		startPos.X.Offset + delta.X,
+		startPos.Y.Scale,
+		startPos.Y.Offset + delta.Y
+	)
+end
+
+Button.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = Button.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+Button.InputChanged:Connect(function(input)
+	if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+		update(input)
+	end
+end)
