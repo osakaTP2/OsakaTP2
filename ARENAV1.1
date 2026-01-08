@@ -17,7 +17,7 @@ DiamondSection:NewToggle("Auto Pull Diamond","Pull nearby diamonds automatically
 end)
 
 -- FIRE
-local FireTab = Window:NewTab("FIRE")
+local FireTab = Window:NewTab("FIRE/Patched")
 local FireSection = FireTab:NewSection("Fire Sword Skills")
 FireSection:NewToggle("Auto Fire Q","Use Q automatically",function(val)
     _G.AUTO_FIRE2 = val
@@ -46,7 +46,7 @@ local LightSection = LightTab:NewSection("Light Skills")
 LightSection:NewToggle("Auto Light Q","Teleport + Q multiple times",function(val)
     _G.AUTO_LIGHT_Q = val
 end)
-LightSection:NewToggle("Auto Light Orb","Fire Light Orb automatically",function(val)
+LightSection:NewToggle("Auto Light Orb/FIX","Fire Light Orb automatically",function(val)
     _G.AUTO_LIGHT_ORB = val
 end)
 
