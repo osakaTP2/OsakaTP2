@@ -1,6 +1,4 @@
---==================================================
--- OSAKATP UPDATE UI (COPY LINK)
---==================================================
+
 local Players = game:GetService("Players")
 local LP = Players.LocalPlayer
 
@@ -14,14 +12,10 @@ local function CopyToClipboard(text)
 	end
 end
 
---==================================================
--- GUI
---==================================================
 local UpdateGui = Instance.new("ScreenGui")
 UpdateGui.Name = "OsakaTP_UpdateUI"
 UpdateGui.ResetOnSpawn = false
 UpdateGui.Parent = LP.PlayerGui
-
 local Main = Instance.new("Frame")
 Main.Parent = UpdateGui
 Main.Size = UDim2.fromOffset(320, 180)
@@ -31,10 +25,6 @@ Main.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 Main.Active = true
 Main.Draggable = true
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
-
---==================================================
--- TITLE
---==================================================
 local Title = Instance.new("TextLabel")
 Title.Parent = Main
 Title.Size = UDim2.new(1, -20, 0, 32)
@@ -46,9 +36,6 @@ Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 
---==================================================
--- LINK BOX
---==================================================
 local LinkBox = Instance.new("TextBox")
 LinkBox.Parent = Main
 LinkBox.Size = UDim2.fromOffset(280, 36)
@@ -63,9 +50,6 @@ LinkBox.BorderSizePixel = 0
 LinkBox.TextWrapped = true
 Instance.new("UICorner", LinkBox)
 
---==================================================
--- COPY BUTTON
---==================================================
 local CopyBtn = Instance.new("TextButton")
 CopyBtn.Parent = Main
 CopyBtn.Size = UDim2.fromOffset(200, 38)
@@ -78,9 +62,6 @@ CopyBtn.BackgroundColor3 = Color3.fromRGB(60,170,90)
 CopyBtn.BorderSizePixel = 0
 Instance.new("UICorner", CopyBtn)
 
---==================================================
--- COPY LOGIC
---==================================================
 CopyBtn.MouseButton1Click:Connect(function()
 	CopyToClipboard(LinkBox.Text)
 
