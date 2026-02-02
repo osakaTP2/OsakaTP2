@@ -16,6 +16,7 @@ local UpdateGui = Instance.new("ScreenGui")
 UpdateGui.Name = "OsakaTP_UpdateUI"
 UpdateGui.ResetOnSpawn = false
 UpdateGui.Parent = LP.PlayerGui
+
 local Main = Instance.new("Frame")
 Main.Parent = UpdateGui
 Main.Size = UDim2.fromOffset(320, 180)
@@ -25,12 +26,14 @@ Main.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 Main.Active = true
 Main.Draggable = true
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
+
+
 local Title = Instance.new("TextLabel")
 Title.Parent = Main
 Title.Size = UDim2.new(1, -20, 0, 32)
 Title.Position = UDim2.fromOffset(10, 8)
 Title.BackgroundTransparency = 1
-Title.Text = "Escape Tsunami For Brainrots V4 [NOKEY]"
+Title.Text = "Escape Tsunami For Brainrots V5 [NOKEY]"
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -40,7 +43,7 @@ local LinkBox = Instance.new("TextBox")
 LinkBox.Parent = Main
 LinkBox.Size = UDim2.fromOffset(280, 36)
 LinkBox.Position = UDim2.fromOffset(20, 55)
-LinkBox.Text = "https://www.youtube.com/watch?v=1pGi9aOBkmA"
+LinkBox.Text = "https://www.youtube.com/watch?v=hEC9Y8OXdxk"
 LinkBox.ClearTextOnFocus = false
 LinkBox.Font = Enum.Font.Gotham
 LinkBox.TextSize = 13
@@ -73,6 +76,9 @@ CopyBtn.MouseButton1Click:Connect(function()
 		CopyBtn.BackgroundColor3 = Color3.fromRGB(60,170,90)
 	end)
 end)
+
+
+
 
 
 
